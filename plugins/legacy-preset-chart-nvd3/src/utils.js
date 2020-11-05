@@ -45,7 +45,10 @@ export function getTimeOrNumberFormatter(format) {
   return format === 'smart_date' ? smartDateFormatter : getNumberFormatter(format);
 }
 
-export function drawBarValues(svg, data, stacked, axisFormat) {
+export function drawBarValues(svg, data, stacked, axisFormat, barAngle) {
+  if (!barAngle) {
+    barAngle = 0;
+  }
   const format = getNumberFormatter(axisFormat);
   const countSeriesDisplayed = data.filter(d => !d.disabled).length;
   const totalStackedValues =
@@ -77,19 +80,29 @@ export function drawBarValues(svg, data, stacked, axisFormat) {
         const textEls = groupLabels
           .append('text')
           .text(format(stacked ? totalStackedValues[index] : d.y))
-          .attr('transform', transformAttr)
+          // .attr('transform', transformAttr)
           .attr('class', 'bar-chart-label');
 
+        const transformArray = transformAttr
+          .substring(transformAttr.indexOf('(') + 1, transformAttr.length - 1)
+          .split(',');
         // fine tune text position
         const bbox = textEls.node().getBBox();
         const labelWidth = bbox.width;
         const labelHeight = bbox.height;
-        textEls.attr('x', xPos + rectWidth / 2 - labelWidth / 2);
-        if (rectObj.attr('class').includes('positive')) {
-          textEls.attr('y', yPos - 5);
-        } else {
-          textEls.attr('y', yPos + rectHeight + labelHeight);
+        let x = xPos + rectWidth / 2 + parseFloat(transformArray[0]);
+        if (parseInt(barAngle) === 0) {
+          x -= labelWidth / 2;
         }
+        let y = yPos - 5 + parseFloat(transformArray[1]);
+        textEls.attr('x', x);
+        if (rectObj.attr('class').includes('positive')) {
+          textEls.attr('y', y);
+        } else {
+          y = yPos + rectHeight + labelHeight + parseFloat(transformArray[1]);
+          textEls.attr('y', y);
+        }
+        textEls.attr('transform', 'rotate(' + barAngle + ',' + x + ',' + y + ')');
       });
   }, ANIMATION_TIME);
 }

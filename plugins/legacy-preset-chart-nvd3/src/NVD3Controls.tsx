@@ -262,6 +262,28 @@ export const showBarValue = {
   },
 };
 
+export const showBarAngle = {
+  name: 'bar_angle',
+  config: {
+    type: 'TextControl',
+    label: t('Bar Angle'),
+    default: 0,
+    renderTrigger: true,
+    description: t('Set the bar value orientation'),
+  },
+};
+
+export const showLabelAngle = {
+  name: 'label_angle',
+  config: {
+    type: 'TextControl',
+    label: t('Label Angle'),
+    default: 45,
+    renderTrigger: true,
+    description: t('Set the label value orientation'),
+  },
+};
+
 export const barStacked = {
   name: 'bar_stacked',
   config: {

@@ -38,6 +38,8 @@ export default {
               label: t('Country Name'),
               default: 'France',
               choices: [
+                'Odisha_block',
+                'Odisha',
                 'Belgium',
                 'Brazil',
                 'Bulgaria',
