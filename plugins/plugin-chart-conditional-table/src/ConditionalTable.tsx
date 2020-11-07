@@ -255,7 +255,7 @@ export default function ConditionalTable(props: ConditionalTableProps) {
               const cellData = getCellData(header, header);
               return (
                 <th key={index.toString()} className={cellData.class}>
-                  {cellData.value}
+                  {header}
                 </th>
               );
             })}
