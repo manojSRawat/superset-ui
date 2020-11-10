@@ -356,9 +356,9 @@ function Table(props: TableProps) {
       <div className="tableWrap">
         <table>
           <thead>
-            {headerGroups.map((headerGroup, headerGroupIndex) => (
+            {headerGroups.map((headerGroup, headerGroupIndex: number) => (
               <tr key={headerGroupIndex.toString()}>
-                {headerGroup.headers.map((column: any, headerIndex) => (
+                {headerGroup.headers.map((column: any, headerIndex: number) => (
                   <th {...column.getHeaderProps()} key={headerIndex.toString()}>
                     <div>
                       <span {...column.getSortByToggleProps()}>
