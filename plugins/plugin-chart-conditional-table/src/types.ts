@@ -17,12 +17,19 @@
  * under the License.
  */
 import { QueryFormData, supersetTheme, TimeseriesDataRecord } from '@superset-ui/core';
+import { Column, Row } from 'react-table';
 
 export interface ConditionalTableStylesProps {
   height: number;
   width: number;
   headerFontSize: keyof typeof supersetTheme.typography.sizes;
   boldText: boolean;
+  conditions: Array<ConditionProps>;
+}
+
+export interface TableProps {
+  columns: Array<Column<Row<object>>>;
+  data: Array<object>;
   conditions: Array<ConditionProps>;
 }
 
@@ -41,10 +48,10 @@ interface ConditionColumnProps {
   initialSymbol: string;
   finalValue: number;
   finalSymbol: string;
-  color: colorProp;
+  color: ColorProp;
 }
 
-interface colorProp {
+interface ColorProp {
   r: string;
   g: string;
   b: string;

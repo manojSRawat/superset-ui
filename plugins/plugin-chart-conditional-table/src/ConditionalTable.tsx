@@ -18,8 +18,13 @@
  */
 import React, { createRef, useEffect } from 'react';
 import { styled } from '@superset-ui/core';
-import { useFilters, useGlobalFilter, usePagination, useSortBy, useTable } from 'react-table';
-import { ConditionalTableProps, ConditionalTableStylesProps, ConditionProps } from './types';
+import { useFilters, usePagination, useSortBy, useTable } from 'react-table';
+import {
+  ConditionalTableProps,
+  ConditionalTableStylesProps,
+  ConditionProps,
+  TableProps,
+} from './types';
 
 // The following Styles component is a <div> element, which has been styled using Emotion
 // For docs, visit https://emotion.sh/docs/styled
@@ -213,52 +218,54 @@ function getCellData(cellKey: string, cellValue: any, conditions: Array<Conditio
   let align = 'left';
   let parsedValue = cellValue;
 
-  for (const condition of conditions) {
-    if (condition.column === cellKey && condition.conditions) {
-      if (condition.alignment) {
-        align = condition.alignment;
-      }
-      if (condition.format) {
-        switch (condition.format) {
-          case 'IN':
-            if (parsedValue) {
-              parsedValue = parsedValue.toString();
-              let afterDecimal = '';
-              if (parsedValue.indexOf('.') > 0) {
-                afterDecimal = parsedValue.slice(parsedValue.indexOf('.'), parsedValue.length);
-                parsedValue = parsedValue.slice(0, Math.max(0, parsedValue.indexOf('.')));
-              }
-              parsedValue = parsedValue.replace(/(\d)(?=(\d\d)+\d$)/g, '$1,') + afterDecimal;
-            } else {
-              parsedValue = 0;
-            }
-            break;
-          case 'PERCENTAGE':
-            parsedValue = parsedValue ? `${parsedValue}%` : '0';
-            break;
+  if (conditions) {
+    for (const condition of conditions) {
+      if (condition.column === cellKey && condition.conditions) {
+        if (condition.alignment) {
+          align = condition.alignment;
         }
-      }
+        if (condition.format) {
+          switch (condition.format) {
+            case 'IN':
+              if (parsedValue) {
+                parsedValue = parsedValue.toString();
+                let afterDecimal = '';
+                if (parsedValue.indexOf('.') > 0) {
+                  afterDecimal = parsedValue.slice(parsedValue.indexOf('.'), parsedValue.length);
+                  parsedValue = parsedValue.slice(0, Math.max(0, parsedValue.indexOf('.')));
+                }
+                parsedValue = parsedValue.replace(/(\d)(?=(\d\d)+\d$)/g, '$1,') + afterDecimal;
+              } else {
+                parsedValue = 0;
+              }
+              break;
+            case 'PERCENTAGE':
+              parsedValue = parsedValue ? `${parsedValue}%` : '0';
+              break;
+          }
+        }
 
-      for (let i = 0; i < condition.conditions.length; i++) {
-        if (
-          condition.conditions[i].initialValue &&
-          isConditionSatisfied(
-            cellValue,
-            condition.conditions[i].initialValue,
-            condition.conditions[i].initialSymbol,
-          )
-        ) {
+        for (let i = 0; i < condition.conditions.length; i++) {
           if (
-            !condition.conditions[i].finalValue ||
-            (condition.conditions[i].finalValue &&
-              isConditionSatisfied(
-                cellValue,
-                condition.conditions[i].finalValue,
-                condition.conditions[i].finalSymbol,
-              ))
+            condition.conditions[i].initialValue &&
+            isConditionSatisfied(
+              cellValue,
+              condition.conditions[i].initialValue,
+              condition.conditions[i].initialSymbol,
+            )
           ) {
-            colorProperty = `rgba(${condition.conditions[i].color.r},${condition.conditions[i].color.g},${condition.conditions[i].color.b},${condition.conditions[i].color.a})`;
-            break;
+            if (
+              !condition.conditions[i].finalValue ||
+              (condition.conditions[i].finalValue &&
+                isConditionSatisfied(
+                  cellValue,
+                  condition.conditions[i].finalValue,
+                  condition.conditions[i].finalSymbol,
+                ))
+            ) {
+              colorProperty = `rgba(${condition.conditions[i].color.r},${condition.conditions[i].color.g},${condition.conditions[i].color.b},${condition.conditions[i].color.a})`;
+              break;
+            }
           }
         }
       }
@@ -272,7 +279,20 @@ function getCellData(cellKey: string, cellValue: any, conditions: Array<Conditio
   };
 }
 
-function Table({ columns, data, conditions }) {
+function DefaultColumnFilter(x: any) {
+  return (
+    <input
+      value={x.column.filterValue || ''}
+      placeholder="Search"
+      onChange={e => {
+        x.column.setFilter(e.target.value || undefined);
+      }}
+    />
+  );
+}
+
+function Table(props: TableProps) {
+  const { columns, data, conditions } = props;
   const defaultColumn = React.useMemo(
     () => ({
       Filter: DefaultColumnFilter,
@@ -280,9 +300,8 @@ function Table({ columns, data, conditions }) {
     [],
   );
 
+  // @ts-ignore
   const {
-    getTableProps,
-    getTableBodyProps,
     headerGroups,
     prepareRow,
     page,
@@ -296,12 +315,7 @@ function Table({ columns, data, conditions }) {
     setPageSize,
     state: { pageIndex, pageSize },
   } = useTable(
-    {
-      columns,
-      data,
-      initialState: { pageIndex: 0 },
-      defaultColumn,
-    },
+    { columns, data, initialState: { pageIndex: 0 }, defaultColumn },
     useFilters,
     useSortBy,
     usePagination,
@@ -310,39 +324,46 @@ function Table({ columns, data, conditions }) {
   let showTotal = false;
 
   data.forEach((d: any) => {
-    for (let key in d) {
+    // eslint-disable-next-line no-restricted-syntax
+    for (const key in d) {
+      // eslint-disable-next-line no-prototype-builtins
       if (total.hasOwnProperty(key)) {
         if (!isNaN(Number(d[key]))) {
+          // @ts-ignore
           total[key] += Math.round(Number(d[key]) * 100) / 100;
+          // @ts-ignore
           total[key] = Math.round(total[key] * 100) / 100;
         }
       } else {
+        // @ts-ignore
         total[key] = isNaN(Number(d[key])) ? '-' : Math.round(Number(d[key]) * 100) / 100;
       }
     }
   });
 
-  for (const condition of conditions) {
-    if (condition.showTotal) {
-      showTotal = true;
-      break;
+  if (conditions) {
+    // eslint-disable-next-line no-restricted-syntax
+    for (const condition of conditions) {
+      if (condition.showTotal) {
+        showTotal = true;
+        break;
+      }
     }
   }
-  console.log('xxxxx===>', total, showTotal);
 
   return (
     <>
       <div className="tableWrap">
-        <table {...getTableProps()}>
+        <table>
           <thead>
-            {headerGroups.map((headerGroup, headerIndex) => (
-              <tr {...headerGroup.getHeaderGroupProps()}>
-                {headerGroup.headers.map((column: any) => (
-                  <th {...column.getHeaderProps()}>
+            {headerGroups.map((headerGroup, headerGroupIndex) => (
+              <tr key={headerGroupIndex.toString()}>
+                {headerGroup.headers.map((column: any, headerIndex) => (
+                  <th {...column.getHeaderProps()} key={headerIndex.toString()}>
                     <div>
                       <span {...column.getSortByToggleProps()}>
                         {column.render('Header')}
-                        {/* Add a sort direction indicator */}
+                        {/* eslint-disable-next-line no-nested-ternary */}
                         {column.isSorted ? (column.isSortedDesc ? ' 🔽' : ' 🔼') : ''}
                       </span>
                     </div>
@@ -353,7 +374,7 @@ function Table({ columns, data, conditions }) {
               </tr>
             ))}
           </thead>
-          <tbody {...getTableBodyProps()}>
+          <tbody>
             {page.map((row: any, i: number) => {
               prepareRow(row);
               return (
@@ -469,18 +490,5 @@ function Table({ columns, data, conditions }) {
         </div>
       </div>
     </>
-  );
-}
-
-// Define a default UI for filtering
-function DefaultColumnFilter({ column: { filterValue, preFilteredRows, setFilter } }) {
-  return (
-    <input
-      value={filterValue || ''}
-      onChange={e => {
-        setFilter(e.target.value || undefined);
-      }}
-      placeholder={`Search`}
-    />
   );
 }
