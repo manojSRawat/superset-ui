@@ -16,9 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React, { useEffect, createRef } from 'react';
+import React, { createRef, useEffect } from 'react';
 import { styled } from '@superset-ui/core';
-import { ConditionalTableProps, ConditionalTableStylesProps } from './types';
+import { useFilters, useGlobalFilter, usePagination, useSortBy, useTable } from 'react-table';
+import { ConditionalTableProps, ConditionalTableStylesProps, ConditionProps } from './types';
 
 // The following Styles component is a <div> element, which has been styled using Emotion
 // For docs, visit https://emotion.sh/docs/styled
@@ -28,11 +29,21 @@ import { ConditionalTableProps, ConditionalTableStylesProps } from './types';
 // https://github.com/apache-superset/superset-ui/blob/master/packages/superset-ui-core/src/style/index.ts
 
 const Styles = styled.div<ConditionalTableStylesProps>`
-  padding: ${({ theme }) => theme.gridUnit * 4}px;
-  border-radius: ${({ theme }) => theme.gridUnit * 2}px;
-  height: ${({ height }) => height};
-  width: ${({ width }) => width};
-  overflow-y: scroll;
+  // padding: ${({ theme }) => theme.gridUnit * 4}px;
+  // border-radius: ${({ theme }) => theme.gridUnit * 2}px;
+  // overflow-y: scroll;
+
+  .main-container {
+    height: 300;
+  }
+
+  .tableWrap {
+    display: block;
+    max-width: 100%;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    border-bottom: 1px solid black;
+  }
 
   h3 {
     /* You can use your props to control CSS! */
@@ -58,6 +69,7 @@ const Styles = styled.div<ConditionalTableStylesProps>`
     vertical-align: middle !important;
     font-size: 14px;
     border: 1px solid #e0e0e0;
+    padding: 10px;
   }
 
   table {
@@ -68,10 +80,17 @@ const Styles = styled.div<ConditionalTableStylesProps>`
     vertical-align: middle !important;
     font-size: 14px;
     border: 1px solid #e0e0e0;
+    padding: 0 10px;
   }
 
   table thead th svg {
     top: 15px !important;
+  }
+
+  .flex-paginate {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
   text-left {
@@ -85,8 +104,28 @@ const Styles = styled.div<ConditionalTableStylesProps>`
   }
 `;
 
-function getHeader(data: Array<object>) {
-  return Object.keys(data[0]);
+function getHeader(data: Array<object>, conditions: Array<ConditionProps>) {
+  const headers: any = [];
+  Object.keys(data[0]).forEach(header => {
+    const headerObj = {
+      Header: header,
+      accessor: header,
+      disableFilters: true,
+      disableSortBy: false,
+    };
+    if (conditions) {
+      for (const condition of conditions) {
+        if (condition.column === header) {
+          headerObj.disableFilters = condition.disableFilters;
+          headerObj.disableSortBy = condition.disableSortBy;
+          break;
+        }
+      }
+    }
+    headers.push(headerObj);
+  });
+
+  return headers;
 }
 
 function isConditionSatisfied(originalValue: any, comparativeValue: any, symbol: String) {
@@ -147,96 +186,10 @@ export default function ConditionalTable(props: ConditionalTableProps) {
     const root = rootElem.current as HTMLElement;
     console.log('Plugin element', root);
   });
-  let showTotal = false;
-  let total: any = {};
 
   console.log('Plugin props', props);
 
-  function getCellData(cellKey: string, cellValue: any, isTotal = false) {
-    // value: Number, conditions: Array<any>
-    let colorProperty = 'rgba(255, 255, 255, 255)';
-    let align = 'left';
-    let parsedValue = cellValue;
-    let showTotalValue = false;
-
-    if (conditions) {
-      for (let condition of conditions) {
-        if (condition.column === cellKey && condition.conditions) {
-          if (condition.alignment) {
-            align = condition.alignment;
-          }
-          if (condition.format) {
-            switch (condition.format) {
-              case 'IN':
-                parsedValue = (parsedValue + '').replace(/(\d)(?=(\d\d)+\d$)/g, '$1,');
-                break;
-              case 'PERCENTAGE':
-                parsedValue = parsedValue + '%';
-                break;
-            }
-          }
-          showTotalValue = condition.showTotal;
-          if (!showTotal && condition.showTotal) {
-            showTotal = condition.showTotal;
-          }
-          for (let i = 0; i < condition.conditions.length; i++) {
-            if (
-              condition.conditions[i].initialValue &&
-              isConditionSatisfied(
-                cellValue,
-                condition.conditions[i].initialValue,
-                condition.conditions[i].initialSymbol,
-              )
-            ) {
-              if (
-                !condition.conditions[i].finalValue ||
-                (condition.conditions[i].finalValue &&
-                  isConditionSatisfied(
-                    cellValue,
-                    condition.conditions[i].finalValue,
-                    condition.conditions[i].finalSymbol,
-                  ))
-              ) {
-                colorProperty =
-                  'rgba(' +
-                  condition.conditions[i].color.r +
-                  ',' +
-                  condition.conditions[i].color.g +
-                  ',' +
-                  condition.conditions[i].color.b +
-                  ',' +
-                  condition.conditions[i].color.a +
-                  ')';
-                break;
-              }
-            }
-          }
-        }
-      }
-    }
-    if (!isNaN(cellValue)) {
-      if (total[cellKey] === '') {
-        total[cellKey] = 0;
-      }
-      total[cellKey] += parseFloat(cellValue);
-      if (!showTotalValue && isTotal) {
-        parsedValue = '';
-        colorProperty = 'rgba(255, 255, 255, 255)';
-      }
-    }
-
-    return {
-      style: { backgroundColor: colorProperty },
-      class: 'text-' + align,
-      value: parsedValue,
-    };
-  }
-
-  if (data && Array.isArray(data) && data.length) {
-    Object.keys(data[0]).forEach((key, index) => {
-      total[key] = index === 0 ? 'Total' : '';
-    });
-  }
+  const columns = getHeader(data, conditions);
 
   return (
     <Styles
@@ -248,29 +201,191 @@ export default function ConditionalTable(props: ConditionalTableProps) {
       conditions={props.conditions}
     >
       <h3>{props.headerText}</h3>
-      <table className="table table-striped table-condensed">
-        <thead>
-          <tr>
-            {getHeader(data).map((header, index) => {
-              const cellData = getCellData(header, header);
+      <div style={{ width, height: height - 50, overflowY: 'scroll' }}>
+        <Table columns={columns} data={data} conditions={conditions} />
+      </div>
+    </Styles>
+  );
+}
+
+function getCellData(cellKey: string, cellValue: any, conditions: Array<ConditionProps>) {
+  let colorProperty = 'rgba(255, 255, 255, 255)';
+  let align = 'left';
+  let parsedValue = cellValue;
+
+  for (const condition of conditions) {
+    if (condition.column === cellKey && condition.conditions) {
+      if (condition.alignment) {
+        align = condition.alignment;
+      }
+      if (condition.format) {
+        switch (condition.format) {
+          case 'IN':
+            if (parsedValue) {
+              parsedValue = parsedValue.toString();
+              let afterDecimal = '';
+              if (parsedValue.indexOf('.') > 0) {
+                afterDecimal = parsedValue.slice(parsedValue.indexOf('.'), parsedValue.length);
+                parsedValue = parsedValue.slice(0, Math.max(0, parsedValue.indexOf('.')));
+              }
+              parsedValue = parsedValue.replace(/(\d)(?=(\d\d)+\d$)/g, '$1,') + afterDecimal;
+            } else {
+              parsedValue = 0;
+            }
+            break;
+          case 'PERCENTAGE':
+            parsedValue = parsedValue ? `${parsedValue}%` : '0';
+            break;
+        }
+      }
+
+      for (let i = 0; i < condition.conditions.length; i++) {
+        if (
+          condition.conditions[i].initialValue &&
+          isConditionSatisfied(
+            cellValue,
+            condition.conditions[i].initialValue,
+            condition.conditions[i].initialSymbol,
+          )
+        ) {
+          if (
+            !condition.conditions[i].finalValue ||
+            (condition.conditions[i].finalValue &&
+              isConditionSatisfied(
+                cellValue,
+                condition.conditions[i].finalValue,
+                condition.conditions[i].finalSymbol,
+              ))
+          ) {
+            colorProperty = `rgba(${condition.conditions[i].color.r},${condition.conditions[i].color.g},${condition.conditions[i].color.b},${condition.conditions[i].color.a})`;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  return {
+    style: { backgroundColor: colorProperty },
+    class: `text-${align}`,
+    value: parsedValue,
+  };
+}
+
+function Table({ columns, data, conditions }) {
+  const defaultColumn = React.useMemo(
+    () => ({
+      Filter: DefaultColumnFilter,
+    }),
+    [],
+  );
+
+  const {
+    getTableProps,
+    getTableBodyProps,
+    headerGroups,
+    prepareRow,
+    page,
+    canPreviousPage,
+    canNextPage,
+    pageOptions,
+    pageCount,
+    gotoPage,
+    nextPage,
+    previousPage,
+    setPageSize,
+    state: { pageIndex, pageSize },
+  } = useTable(
+    {
+      columns,
+      data,
+      initialState: { pageIndex: 0 },
+      defaultColumn,
+    },
+    useFilters,
+    useSortBy,
+    usePagination,
+  );
+  const total = {};
+  let showTotal = false;
+
+  data.forEach((d: any) => {
+    for (let key in d) {
+      if (total.hasOwnProperty(key)) {
+        if (!isNaN(Number(d[key]))) {
+          total[key] += Math.round(Number(d[key]) * 100) / 100;
+          total[key] = Math.round(total[key] * 100) / 100;
+        }
+      } else {
+        total[key] = isNaN(Number(d[key])) ? '-' : Math.round(Number(d[key]) * 100) / 100;
+      }
+    }
+  });
+
+  for (const condition of conditions) {
+    if (condition.showTotal) {
+      showTotal = true;
+      break;
+    }
+  }
+  console.log('xxxxx===>', total, showTotal);
+
+  return (
+    <>
+      <div className="tableWrap">
+        <table {...getTableProps()}>
+          <thead>
+            {headerGroups.map((headerGroup, headerIndex) => (
+              <tr {...headerGroup.getHeaderGroupProps()}>
+                {headerGroup.headers.map((column: any) => (
+                  <th {...column.getHeaderProps()}>
+                    <div>
+                      <span {...column.getSortByToggleProps()}>
+                        {column.render('Header')}
+                        {/* Add a sort direction indicator */}
+                        {column.isSorted ? (column.isSortedDesc ? ' 🔽' : ' 🔼') : ''}
+                      </span>
+                    </div>
+                    {/* Render the columns filter UI */}
+                    <div>{column.canFilter ? column.render('Filter') : null}</div>
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody {...getTableBodyProps()}>
+            {page.map((row: any, i: number) => {
+              prepareRow(row);
               return (
-                <th key={index.toString()} className={cellData.class}>
-                  {header}
-                </th>
+                <tr {...row.getRowProps()} key={i.toString()}>
+                  {row.cells.map((cell: any, cellIndex: number) => {
+                    const cellData = getCellData(
+                      cell.column.id,
+                      cell.row.original[cell.column.id],
+                      conditions,
+                    );
+                    return (
+                      <td
+                        key={cellIndex.toString()}
+                        {...cell.getCellProps()}
+                        style={{ ...cellData.style }}
+                        className={cellData.class}
+                      >
+                        {cellData.value}
+                      </td>
+                    );
+                  })}
+                </tr>
               );
             })}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row, rowIndex) => {
-            return (
-              <tr key={rowIndex.toString()}>
-                {Object.keys(row).map((cellKey, cellIndex) => {
-                  const cellData = getCellData(cellKey, row[cellKey]);
+            {showTotal ? (
+              <tr>
+                {Object.keys(total).map((cellKey: string, index) => {
+                  const cellData = getCellData(cellKey, total[cellKey], conditions);
                   return (
                     <td
-                      key={cellKey.toString()}
-                      style={{ ...cellData.style }}
+                      key={index.toString()}
+                      style={{ ...cellData.style, borderTop: '2px solid black' }}
                       className={cellData.class}
                     >
                       {cellData.value}
@@ -278,26 +393,94 @@ export default function ConditionalTable(props: ConditionalTableProps) {
                   );
                 })}
               </tr>
-            );
-          })}
-          {showTotal ? (
-            <tr>
-              {Object.keys(total).map((cellKey, index) => {
-                const cellData = getCellData(cellKey, total[cellKey], true);
-                return (
-                  <td
-                    key={index.toString()}
-                    style={{ ...cellData.style }}
-                    className={cellData.class}
-                  >
-                    {cellData.value}
-                  </td>
-                );
-              })}
-            </tr>
-          ) : null}
-        </tbody>
-      </table>
-    </Styles>
+            ) : null}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <div>
+          <div className="pagination flex-paginate">
+            <div>
+              <button
+                type="button"
+                className="btn"
+                disabled={!canPreviousPage}
+                onClick={() => gotoPage(0)}
+              >
+                {'<<'}
+              </button>{' '}
+              <button
+                type="button"
+                className="btn"
+                disabled={!canPreviousPage}
+                onClick={() => previousPage()}
+              >
+                {'<'}
+              </button>{' '}
+            </div>
+            <div>
+              <span>
+                Page{' '}
+                <strong>
+                  <input
+                    type="number"
+                    defaultValue={pageIndex + 1}
+                    style={{ width: '100px' }}
+                    onChange={e => {
+                      const p = e.target.value ? Number(e.target.value) - 1 : 0;
+                      gotoPage(p);
+                    }}
+                  />{' '}
+                  of {pageOptions.length}
+                </strong>{' '}
+              </span>{' '}
+              <select
+                value={pageSize}
+                onChange={e => {
+                  setPageSize(Number(e.target.value));
+                }}
+              >
+                {[10, 20, 30, 40, 50].map(ps => (
+                  <option key={ps} value={ps}>
+                    Show {ps}
+                  </option>
+                ))}
+              </select>{' '}
+            </div>
+            <div>
+              <button
+                type="button"
+                className="btn"
+                disabled={!canNextPage}
+                onClick={() => nextPage()}
+              >
+                {'>'}
+              </button>{' '}
+              <button
+                type="button"
+                className="btn"
+                disabled={!canNextPage}
+                onClick={() => gotoPage(pageCount - 1)}
+              >
+                {'>>'}
+              </button>{' '}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// Define a default UI for filtering
+function DefaultColumnFilter({ column: { filterValue, preFilteredRows, setFilter } }) {
+  return (
+    <input
+      value={filterValue || ''}
+      onChange={e => {
+        setFilter(e.target.value || undefined);
+      }}
+      placeholder={`Search`}
+    />
   );
 }

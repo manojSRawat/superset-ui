@@ -26,11 +26,13 @@ export interface ConditionalTableStylesProps {
   conditions: Array<ConditionProps>;
 }
 
-interface ConditionProps {
+export interface ConditionProps {
   column: string;
   alignment: string;
   format: string;
   showTotal: boolean;
+  disableFilters: boolean;
+  disableSortBy: boolean;
   conditions: Array<ConditionColumnProps>;
 }
 
