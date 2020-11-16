@@ -278,6 +278,7 @@ function nvd3Vis(element, props) {
     ranges,
     reduceXTicks = false,
     showBarValue,
+    barAngle,
     showBrush,
     showControls,
     showLabels,
@@ -512,11 +513,10 @@ function nvd3Vis(element, props) {
     }
     // Assuming the container has padding already other than for top margin
     chart.margin({ left: 0, right: 0, bottom: 0 });
-
     if (showBarValue) {
-      drawBarValues(svg, data, isBarStacked, yAxisFormat);
+      drawBarValues(svg, data, isBarStacked, yAxisFormat, barAngle);
       chart.dispatch.on('stateChange.drawBarValues', () => {
-        drawBarValues(svg, data, isBarStacked, yAxisFormat);
+        drawBarValues(svg, data, isBarStacked, yAxisFormat, barAngle);
       });
     }
 
