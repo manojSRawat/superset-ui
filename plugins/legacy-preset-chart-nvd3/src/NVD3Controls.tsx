@@ -303,6 +303,17 @@ export const barStacked: CustomControlItem = {
   },
 };
 
+export const showBarAngle = {
+  name: 'bar_angle',
+  config: {
+    type: 'TextControl',
+    label: t('Bar Angle'),
+    default: 0,
+    renderTrigger: true,
+    description: t('Set the bar value orientation'),
+  },
+};
+
 export const reduceXTicks: CustomControlItem = {
   name: 'reduce_x_ticks',
   config: {

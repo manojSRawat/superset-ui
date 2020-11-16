@@ -28,6 +28,7 @@ import {
   barStacked,
   reduceXTicks,
   yAxisLabel,
+  showBarAngle,
   yAxisShowMinmax,
   yAxisBounds,
 } from '../NVD3Controls';
@@ -78,6 +79,7 @@ const config: ControlPanelConfig = {
         [showLegend],
         [showBarValue],
         [barStacked],
+        [showBarAngle],
         [
           {
             name: 'order_bars',
