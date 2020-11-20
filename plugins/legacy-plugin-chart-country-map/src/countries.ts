@@ -41,8 +41,12 @@ import ukraine from 'file-loader!./countries/ukraine.geojson';
 import uruguay from 'file-loader!./countries/uruguay.geojson';
 import usa from 'file-loader!./countries/usa.geojson';
 import zambia from 'file-loader!./countries/zambia.geojson';
+import odisha from 'file-loader!./countries/odisha.geojson';
+import odisha_block from 'file-loader!./countries/odisha_block.geojson';
 
 export const countries = {
+  odisha_block,
+  odisha,
   austria,
   australia,
   belgium,

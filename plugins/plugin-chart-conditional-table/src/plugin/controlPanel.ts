@@ -128,6 +128,18 @@ const config: ControlPanelConfig = {
       controlSetRows: [
         [
           {
+            name: 'page_size',
+            config: {
+              type: 'TextControl',
+              default: 10,
+              renderTrigger: true,
+              label: t('Page Size'),
+              description: t('Table page size'),
+            },
+          },
+        ],
+        [
+          {
             name: 'header_text',
             config: {
               type: 'TextControl',
