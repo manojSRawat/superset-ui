@@ -27,8 +27,12 @@ import uk from 'file-loader!./countries/uk.geojson';
 import ukraine from 'file-loader!./countries/ukraine.geojson';
 import usa from 'file-loader!./countries/usa.geojson';
 import zambia from 'file-loader!./countries/zambia.geojson';
+import odisha from 'file-loader!./countries/odisha.geojson';
+import odisha_block from 'file-loader!./countries/odisha_block.geojson';
 
 const countries = {
+  odisha_block,
+  odisha,
   belgium,
   brazil,
   bulgaria,
