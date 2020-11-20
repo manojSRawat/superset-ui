@@ -45,7 +45,7 @@ const Styles = styled.div<ConditionalTableStylesProps>`
   .tableWrap {
     display: block;
     max-width: 100%;
-    overflow-x: scroll;
+    overflow-x: auto;
     overflow-y: hidden;
     border-bottom: 1px solid black;
   }
@@ -204,10 +204,16 @@ export default function ConditionalTable(props: ConditionalTableProps) {
       height={height}
       width={width}
       conditions={props.conditions}
+      pageSize={props.pageSize}
     >
       <h3>{props.headerText}</h3>
-      <div style={{ width, height: height - 50, overflowY: 'scroll' }}>
-        <Table columns={columns} data={data} conditions={conditions} />
+      <div style={{ width, height: height - 50, overflowY: 'auto' }}>
+        <Table
+          columns={columns}
+          data={data}
+          conditions={conditions}
+          defaultPageSize={Number(props.pageSize)}
+        />
       </div>
     </Styles>
   );
@@ -293,6 +299,8 @@ function DefaultColumnFilter(x: any) {
 
 function Table(props: TableProps) {
   const { columns, data, conditions } = props;
+  let { defaultPageSize } = props;
+
   const defaultColumn = React.useMemo(
     () => ({
       Filter: DefaultColumnFilter,
@@ -315,7 +323,7 @@ function Table(props: TableProps) {
     setPageSize,
     state: { pageIndex, pageSize },
   } = useTable(
-    { columns, data, initialState: { pageIndex: 0 }, defaultColumn },
+    { columns, data, initialState: { pageIndex: 0, pageSize: defaultPageSize }, defaultColumn },
     useFilters,
     useSortBy,
     usePagination,
@@ -349,6 +357,10 @@ function Table(props: TableProps) {
         break;
       }
     }
+  }
+  let pages = [10, 20, 30, 40, 50];
+  if (pages.indexOf(defaultPageSize) === -1) {
+    pages = [defaultPageSize].concat(pages);
   }
 
   return (
@@ -458,10 +470,12 @@ function Table(props: TableProps) {
               <select
                 value={pageSize}
                 onChange={e => {
+                  defaultPageSize = Number(e.target.value);
+                  console.log('zzzzzzz', defaultPageSize);
                   setPageSize(Number(e.target.value));
                 }}
               >
-                {[10, 20, 30, 40, 50].map(ps => (
+                {pages.map(ps => (
                   <option key={ps} value={ps}>
                     Show {ps}
                   </option>
