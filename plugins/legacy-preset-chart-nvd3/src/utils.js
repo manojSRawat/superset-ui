@@ -91,9 +91,7 @@ export function drawBarValues(svg, data, stacked, axisFormat, barAngle) {
         const labelWidth = bbox.width;
         const labelHeight = bbox.height;
         let x = xPos + rectWidth / 2 + parseFloat(transformArray[0]);
-        console.log(barAngle);
         if (parseInt(barAngle) === 0) {
-          console.log('in if');
           x -= labelWidth / 2;
         }
         let y = yPos - 5 + parseFloat(transformArray[1]);

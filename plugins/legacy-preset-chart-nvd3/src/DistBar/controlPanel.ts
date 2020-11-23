@@ -28,6 +28,7 @@ import {
   reduceXTicks,
   yAxisLabel,
   showBarAngle,
+  showLabelAngle,
 } from '../NVD3Controls';
 
 export default {
@@ -59,7 +60,8 @@ export default {
       expanded: true,
       controlSetRows: [
         ['color_scheme', 'label_colors'],
-        [showLegend, showBarValue, showBarAngle],
+        [showBarValue, showBarAngle],
+        [showLegend, showLabelAngle],
         [
           barStacked,
           {
