@@ -314,6 +314,17 @@ export const showBarAngle = {
   },
 };
 
+export const showLabelAngle = {
+  name: 'label_angle',
+  config: {
+    type: 'TextControl',
+    label: t('Label Angle'),
+    default: 45,
+    renderTrigger: true,
+    description: t('Set the label value orientation'),
+  },
+};
+
 export const reduceXTicks: CustomControlItem = {
   name: 'reduce_x_ticks',
   config: {

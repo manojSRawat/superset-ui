@@ -282,6 +282,7 @@ function nvd3Vis(element, props) {
     reduceXTicks = false,
     showBarValue,
     barAngle,
+    labelAngle,
     showBrush,
     showControls,
     showLabels,
@@ -558,6 +559,10 @@ function nvd3Vis(element, props) {
     }
     if (chart.x2Axis && chart.x2Axis.rotateLabels) {
       chart.x2Axis.rotateLabels(xLabelRotation);
+    }
+
+    if (labelAngle) {
+      chart.xAxis.rotateLabels(labelAngle);
     }
 
     if ('showLegend' in chart && typeof showLegend !== 'undefined') {
