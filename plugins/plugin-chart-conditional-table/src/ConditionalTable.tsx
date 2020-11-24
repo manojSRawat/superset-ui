@@ -47,7 +47,6 @@ const Styles = styled.div<ConditionalTableStylesProps>`
     max-width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
-    border-bottom: 1px solid black;
   }
 
   h3 {
@@ -213,6 +212,7 @@ export default function ConditionalTable(props: ConditionalTableProps) {
           data={data}
           conditions={conditions}
           defaultPageSize={Number(props.pageSize)}
+          disablePagination={!!props.disablePagination}
         />
       </div>
     </Styles>
@@ -298,7 +298,7 @@ function DefaultColumnFilter(x: any) {
 }
 
 function Table(props: TableProps) {
-  const { columns, data, conditions } = props;
+  const { columns, data, conditions, disablePagination } = props;
   let { defaultPageSize } = props;
 
   const defaultColumn = React.useMemo(
@@ -323,7 +323,12 @@ function Table(props: TableProps) {
     setPageSize,
     state: { pageIndex, pageSize },
   } = useTable(
-    { columns, data, initialState: { pageIndex: 0, pageSize: defaultPageSize }, defaultColumn },
+    {
+      columns,
+      data,
+      initialState: { pageIndex: 0, pageSize: disablePagination ? data.length : defaultPageSize },
+      defaultColumn,
+    },
     useFilters,
     useSortBy,
     usePagination,
@@ -430,79 +435,81 @@ function Table(props: TableProps) {
           </tbody>
         </table>
       </div>
-      <div>
+      {disablePagination ? null : (
         <div>
-          <div className="pagination flex-paginate">
-            <div>
-              <button
-                type="button"
-                className="btn"
-                disabled={!canPreviousPage}
-                onClick={() => gotoPage(0)}
-              >
-                {'<<'}
-              </button>{' '}
-              <button
-                type="button"
-                className="btn"
-                disabled={!canPreviousPage}
-                onClick={() => previousPage()}
-              >
-                {'<'}
-              </button>{' '}
-            </div>
-            <div>
-              <span>
-                Page{' '}
-                <strong>
-                  <input
-                    type="number"
-                    defaultValue={pageIndex + 1}
-                    style={{ width: '100px' }}
-                    onChange={e => {
-                      const p = e.target.value ? Number(e.target.value) - 1 : 0;
-                      gotoPage(p);
-                    }}
-                  />{' '}
-                  of {pageOptions.length}
-                </strong>{' '}
-              </span>{' '}
-              <select
-                value={pageSize}
-                onChange={e => {
-                  defaultPageSize = Number(e.target.value);
-                  console.log('zzzzzzz', defaultPageSize);
-                  setPageSize(Number(e.target.value));
-                }}
-              >
-                {pages.map(ps => (
-                  <option key={ps} value={ps}>
-                    Show {ps}
-                  </option>
-                ))}
-              </select>{' '}
-            </div>
-            <div>
-              <button
-                type="button"
-                className="btn"
-                disabled={!canNextPage}
-                onClick={() => nextPage()}
-              >
-                {'>'}
-              </button>{' '}
-              <button
-                type="button"
-                className="btn"
-                disabled={!canNextPage}
-                onClick={() => gotoPage(pageCount - 1)}
-              >
-                {'>>'}
-              </button>{' '}
+          <div>
+            <div className="pagination flex-paginate">
+              <div>
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={!canPreviousPage}
+                  onClick={() => gotoPage(0)}
+                >
+                  {'<<'}
+                </button>{' '}
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={!canPreviousPage}
+                  onClick={() => previousPage()}
+                >
+                  {'<'}
+                </button>{' '}
+              </div>
+              <div>
+                <span>
+                  Page{' '}
+                  <strong>
+                    <input
+                      type="number"
+                      defaultValue={pageIndex + 1}
+                      style={{ width: '100px' }}
+                      onChange={e => {
+                        const p = e.target.value ? Number(e.target.value) - 1 : 0;
+                        gotoPage(p);
+                      }}
+                    />{' '}
+                    of {pageOptions.length}
+                  </strong>{' '}
+                </span>{' '}
+                <select
+                  value={pageSize}
+                  onChange={e => {
+                    defaultPageSize = Number(e.target.value);
+                    console.log('zzzzzzz', defaultPageSize);
+                    setPageSize(Number(e.target.value));
+                  }}
+                >
+                  {pages.map(ps => (
+                    <option key={ps} value={ps}>
+                      Show {ps}
+                    </option>
+                  ))}
+                </select>{' '}
+              </div>
+              <div>
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={!canNextPage}
+                  onClick={() => nextPage()}
+                >
+                  {'>'}
+                </button>{' '}
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={!canNextPage}
+                  onClick={() => gotoPage(pageCount - 1)}
+                >
+                  {'>>'}
+                </button>{' '}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 }
