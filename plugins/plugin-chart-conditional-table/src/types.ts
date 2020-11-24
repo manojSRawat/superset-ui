@@ -25,6 +25,7 @@ export interface ConditionalTableStylesProps {
   headerFontSize: keyof typeof supersetTheme.typography.sizes;
   boldText: boolean;
   pageSize: number;
+  disablePagination: boolean;
   conditions: Array<ConditionProps>;
 }
 
@@ -33,6 +34,7 @@ export interface TableProps {
   data: Array<object>;
   conditions: Array<ConditionProps>;
   defaultPageSize: number;
+  disablePagination: boolean;
 }
 
 export interface ConditionProps {

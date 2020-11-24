@@ -128,6 +128,16 @@ const config: ControlPanelConfig = {
       controlSetRows: [
         [
           {
+            name: 'disable_pagination',
+            config: {
+              type: 'CheckboxControl',
+              default: true,
+              renderTrigger: true,
+              label: t('Disable Pagination'),
+              description: t('Disabled the pagination'),
+            },
+          },
+          {
             name: 'page_size',
             config: {
               type: 'TextControl',
