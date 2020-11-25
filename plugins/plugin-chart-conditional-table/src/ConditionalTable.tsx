@@ -242,11 +242,13 @@ function getCellData(cellKey: string, cellValue: any, conditions: Array<Conditio
                 }
                 parsedValue = parsedValue.replace(/(\d)(?=(\d\d)+\d$)/g, '$1,') + afterDecimal;
               } else {
+                cellValue = 0;
                 parsedValue = 0;
               }
               break;
             case 'PERCENTAGE':
-              parsedValue = parsedValue ? `${parsedValue}%` : '0';
+              cellValue = isNaN(cellValue) ? 0 : cellValue;
+              parsedValue = parsedValue ? `${parsedValue}%` : '0%';
               break;
           }
         }
