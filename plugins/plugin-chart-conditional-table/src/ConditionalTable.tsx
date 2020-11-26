@@ -248,7 +248,7 @@ function getCellData(cellKey: string, cellValue: any, conditions: Array<Conditio
               }
               break;
             case 'PERCENTAGE':
-              cellValue = isNaN(cellValue) ? 0 : cellValue;
+              cellValue = isNaN(cellValue) || cellValue === null ? 0 : cellValue;
               parsedValue = parsedValue ? `${parsedValue}%` : '0%';
               break;
           }
