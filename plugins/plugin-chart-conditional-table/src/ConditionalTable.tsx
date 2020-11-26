@@ -204,6 +204,7 @@ export default function ConditionalTable(props: ConditionalTableProps) {
       width={width}
       conditions={props.conditions}
       pageSize={props.pageSize}
+      disablePagination={props.disablePagination}
     >
       <h3>{props.headerText}</h3>
       <div style={{ width, height: height - 50, overflowY: 'auto' }}>
