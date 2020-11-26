@@ -131,7 +131,7 @@ const config: ControlPanelConfig = {
             name: 'disable_pagination',
             config: {
               type: 'CheckboxControl',
-              default: true,
+              default: false,
               renderTrigger: true,
               label: t('Disable Pagination'),
               description: t('Disabled the pagination'),
