@@ -38,6 +38,13 @@ const Styles = styled.div<ConditionalTableStylesProps>`
   // border-radius: ${({ theme }) => theme.gridUnit * 2}px;
   // overflow-y: scroll;
 
+  table {
+    width: 100%;
+    min-width: auto;
+    max-width: none;
+    margin: 0;
+  }
+
   .main-container {
     height: 300;
   }
@@ -220,10 +227,16 @@ export default function ConditionalTable(props: ConditionalTableProps) {
   );
 }
 
-function getCellData(cellKey: string, cellValue: any, conditions: Array<ConditionProps>) {
+function getCellData(
+  cellKey: string,
+  cellValue: any,
+  conditions: Array<ConditionProps>,
+  isTotalRow = false,
+) {
   let colorProperty = 'rgba(255, 255, 255, 255)';
   let align = 'left';
   let parsedValue = cellValue;
+  let showTotal = false;
 
   if (conditions) {
     for (const condition of conditions) {
@@ -231,6 +244,7 @@ function getCellData(cellKey: string, cellValue: any, conditions: Array<Conditio
         if (condition.alignment) {
           align = condition.alignment;
         }
+        showTotal = condition.showTotal;
         if (condition.format) {
           switch (condition.format) {
             case 'IN':
@@ -279,6 +293,10 @@ function getCellData(cellKey: string, cellValue: any, conditions: Array<Conditio
         }
       }
     }
+  }
+
+  if (isTotalRow && !showTotal) {
+    parsedValue = '';
   }
 
   return {
@@ -366,6 +384,7 @@ function Table(props: TableProps) {
       }
     }
   }
+
   let pages = [10, 20, 30, 40, 50];
   if (pages.indexOf(defaultPageSize) === -1) {
     pages = [defaultPageSize].concat(pages);
@@ -422,11 +441,15 @@ function Table(props: TableProps) {
             {showTotal ? (
               <tr>
                 {Object.keys(total).map((cellKey: string, index) => {
-                  const cellData = getCellData(cellKey, total[cellKey], conditions);
+                  const cellData = getCellData(cellKey, total[cellKey], conditions, true);
                   return (
                     <td
                       key={index.toString()}
-                      style={{ ...cellData.style, borderTop: '2px solid black' }}
+                      style={{
+                        ...cellData.style,
+                        borderTop: '2px solid black',
+                        fontWeight: 'bolder',
+                      }}
                       className={cellData.class}
                     >
                       {cellData.value}
@@ -480,7 +503,6 @@ function Table(props: TableProps) {
                   value={pageSize}
                   onChange={e => {
                     defaultPageSize = Number(e.target.value);
-                    console.log('zzzzzzz', defaultPageSize);
                     setPageSize(Number(e.target.value));
                   }}
                 >
