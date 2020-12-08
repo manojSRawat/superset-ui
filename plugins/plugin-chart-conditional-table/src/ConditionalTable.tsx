@@ -39,7 +39,7 @@ const Styles = styled.div<ConditionalTableStylesProps>`
   // overflow-y: scroll;
 
   table {
-    width: 100%;
+    width: 99%;
     min-width: auto;
     max-width: none;
     margin: 0;
@@ -446,7 +446,6 @@ function Table(props: TableProps) {
                     <td
                       key={index.toString()}
                       style={{
-                        ...cellData.style,
                         borderTop: '2px solid black',
                         fontWeight: 'bolder',
                       }}
