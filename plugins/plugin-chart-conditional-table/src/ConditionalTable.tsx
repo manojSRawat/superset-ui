@@ -123,12 +123,16 @@ function getHeader(data: Array<object>, conditions: Array<ConditionProps>) {
       accessor: header,
       disableFilters: true,
       disableSortBy: false,
+      className: 'text-left',
     };
     if (conditions) {
       for (const condition of conditions) {
         if (condition.column === header) {
           headerObj.disableFilters = condition.disableFilters;
           headerObj.disableSortBy = condition.disableSortBy;
+          if (condition.alignment) {
+            headerObj.className = 'text-' + condition.alignment;
+          }
           break;
         }
       }
@@ -398,7 +402,10 @@ function Table(props: TableProps) {
             {headerGroups.map((headerGroup, headerGroupIndex: number) => (
               <tr key={headerGroupIndex.toString()}>
                 {headerGroup.headers.map((column: any, headerIndex: number) => (
-                  <th {...column.getHeaderProps()} key={headerIndex.toString()}>
+                  <th
+                    {...column.getHeaderProps([{ className: column.className }])}
+                    key={headerIndex.toString()}
+                  >
                     <div>
                       <span {...column.getSortByToggleProps()}>
                         {column.render('Header')}
