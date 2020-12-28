@@ -17,14 +17,22 @@
  * under the License.
  */
 import React, { createRef, useEffect } from 'react';
-import { styled } from '@superset-ui/core';
+import { DataRecord, styled } from '@superset-ui/core';
 import { useFilters, usePagination, useSortBy, useTable } from 'react-table';
 import {
+  TableChartTransformedProps,
   ConditionalTableProps,
   ConditionalTableStylesProps,
   ConditionProps,
   TableProps,
 } from './types';
+
+import DataTable, {
+  DataTableProps,
+  SearchInputProps,
+  SelectPageSizeRendererProps,
+  SizeOption,
+} from './DataTable';
 
 // The following Styles component is a <div> element, which has been styled using Emotion
 // For docs, visit https://emotion.sh/docs/styled
@@ -33,11 +41,7 @@ import {
 // imported from @superset-ui/core. For variables available, please visit
 // https://github.com/apache-superset/superset-ui/blob/master/packages/superset-ui-core/src/style/index.ts
 
-const Styles = styled.div<ConditionalTableStylesProps>`
-  // padding: ${({ theme }) => theme.gridUnit * 4}px;
-  // border-radius: ${({ theme }) => theme.gridUnit * 2}px;
-  // overflow-y: scroll;
-
+const Styles = styled.div`
   table {
     width: 99%;
     min-width: auto;
@@ -54,12 +58,6 @@ const Styles = styled.div<ConditionalTableStylesProps>`
     max-width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
-  }
-
-  h3 {
-    /* You can use your props to control CSS! */
-    font-size: ${({ theme, headerFontSize }) => theme.typography.sizes[headerFontSize]};
-    font-weight: ${({ theme, boldText }) => theme.typography.weights[boldText ? 'bold' : 'normal']};
   }
 
   .pivot_table.mt-25px {
@@ -115,19 +113,19 @@ const Styles = styled.div<ConditionalTableStylesProps>`
   }
 `;
 
-function getHeader(data: Array<object>, conditions: Array<ConditionProps>) {
+function getHeader(columns: Array<object>, conditions: Array<ConditionProps>) {
   const headers: any = [];
-  Object.keys(data[0]).forEach(header => {
+  columns.forEach(header => {
     const headerObj = {
-      Header: header,
-      accessor: header,
+      Header: header.key,
+      accessor: header.key,
       disableFilters: true,
       disableSortBy: false,
       className: 'text-left',
     };
     if (conditions) {
       for (const condition of conditions) {
-        if (condition.column === header) {
+        if (condition.column === header.key) {
           headerObj.disableFilters = condition.disableFilters;
           headerObj.disableSortBy = condition.disableSortBy;
           if (condition.alignment) {
@@ -188,10 +186,14 @@ function isConditionSatisfied(originalValue: any, comparativeValue: any, symbol:
  *  * FormData (your controls!) provided as props by transformProps.ts
  */
 
-export default function ConditionalTable(props: ConditionalTableProps) {
+export default function ConditionalTable<D extends DataRecord = DataRecord>(
+  props: TableChartTransformedProps<D> & {
+    sticky?: DataTableProps<D>['sticky'];
+  },
+) {
   // height and width are the height and width of the DOM element as it exists in the dashboard.
   // There is also a `data` prop, which is, of course, your DATA 🎉
-  const { data, height, width, conditions } = props;
+  const { columns, data, height, width, conditions } = props;
 
   const rootElem = createRef<HTMLDivElement>();
 
@@ -204,28 +206,23 @@ export default function ConditionalTable(props: ConditionalTableProps) {
 
   console.log('Plugin props', props);
 
-  const columns = getHeader(data, conditions);
+  const headers = getHeader(columns, conditions);
+
+  console.log('headers=?', headers);
 
   return (
-    <Styles
-      ref={rootElem}
-      boldText={props.boldText}
-      headerFontSize={props.headerFontSize}
-      height={height}
-      width={width}
-      conditions={props.conditions}
-      pageSize={props.pageSize}
-      disablePagination={props.disablePagination}
-    >
-      <h3>{props.headerText}</h3>
+    <Styles>
+      {/* <h3>{props.headerText}</h3> */}
       <div style={{ width, height: height - 50, overflowY: 'auto' }}>
-        <Table
-          columns={columns}
-          data={data}
-          conditions={conditions}
-          defaultPageSize={Number(props.pageSize)}
-          disablePagination={!!props.disablePagination}
-        />
+        {
+          <Table
+            columns={headers}
+            data={data}
+            conditions={conditions}
+            defaultPageSize={Number(props.pageSize)}
+            disablePagination={true}
+          />
+        }
       </div>
     </Styles>
   );
