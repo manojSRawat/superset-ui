@@ -16,17 +16,80 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { QueryFormData, supersetTheme, TimeseriesDataRecord } from '@superset-ui/core';
+import {
+  DataRecord,
+  ChartProps,
+  QueryFormData,
+  supersetTheme,
+  TimeseriesDataRecord,
+  QueryFormDataMetric,
+  TimeFormatter,
+  NumberFormatter,
+  DataRecordValue,
+  DataRecordFilters,
+  TimeGranularity,
+} from '@superset-ui/core';
 import { Column, Row } from 'react-table';
+
+export enum DataType {
+  Number = 'number',
+  String = 'string',
+  DateTime = 'datetime',
+}
+
+export interface TableChartFormData {
+  boldText: boolean;
+  headerFontSize: number;
+  headerText: string;
+  alignPn?: boolean;
+  colorPn?: boolean;
+  includeSearch?: boolean;
+  pageLength?: string | number | null; // null means auto-paginate
+  metrics?: QueryFormDataMetric[] | null;
+  percentMetrics?: QueryFormDataMetric[] | null;
+  orderDesc?: boolean;
+  showCellBars?: boolean;
+  tableTimestampFormat?: string;
+  tableFilter?: boolean;
+  timeGrainSqla?: TimeGranularity;
+  conditions: Array<ConditionProps>;
+}
+
+export interface TableChartData<D extends DataRecord = DataRecord> {
+  records: D[];
+  columns: string[];
+}
+
+export interface TableChartProps<D extends DataRecord = DataRecord> extends ChartProps {
+  formData: TableChartFormData;
+  queryData: ChartProps['queryData'] & {
+    data?: TableChartData<D>;
+  };
+}
+
+export interface TableChartProp<D extends DataRecord = DataRecord> extends ChartProps {
+  formData: TableChartFormData;
+  queryData: ChartProps['queryData'] & {
+    data: D[];
+  };
+}
+
+export type CustomFormatter = (value: DataRecordValue) => string;
+
+export interface DataColumnMeta {
+  // `key` is what is called `label` in the input props
+  key: string;
+  // `label` is verbose column name used for rendering
+  label: string;
+  dataType: DataType;
+  formatter?: TimeFormatter | NumberFormatter | CustomFormatter;
+}
 
 export interface ConditionalTableStylesProps {
   height: number;
   width: number;
   headerFontSize: keyof typeof supersetTheme.typography.sizes;
   boldText: boolean;
-  pageSize: number;
-  disablePagination: boolean;
-  conditions: Array<ConditionProps>;
 }
 
 export interface TableProps {
@@ -47,7 +110,7 @@ export interface ConditionProps {
   conditions: Array<ConditionColumnProps>;
 }
 
-interface ConditionColumnProps {
+export interface ConditionColumnProps {
   initialValue: number;
   initialSymbol: string;
   finalValue: number;
@@ -75,3 +138,28 @@ export type ConditionalTableProps = ConditionalTableStylesProps &
     data: TimeseriesDataRecord[];
     // add typing here for the props you pass in from transformProps.ts!
   };
+
+export interface TableChartTransformedProps<D extends DataRecord = DataRecord> {
+  height: number;
+  width: number;
+  headerFontSize: keyof typeof supersetTheme.typography.sizes;
+  headerText: string;
+  boldText: boolean;
+  data: D[];
+  columns: DataColumnMeta[];
+  metrics?: (keyof D)[];
+  percentMetrics?: (keyof D)[];
+  pageSize?: number;
+  showCellBars?: boolean;
+  sortDesc?: boolean;
+  includeSearch?: boolean;
+  alignPositiveNegative?: boolean;
+  colorPositiveNegative?: boolean;
+  tableTimestampFormat?: string;
+  conditions: Array<ConditionProps>;
+  // These are dashboard filters, don't be confused with in-chart search filter
+  // enabled by `includeSearch`
+  filters?: DataRecordFilters;
+  emitFilter?: boolean;
+  onChangeFilter?: ChartProps['hooks']['onAddFilter'];
+}

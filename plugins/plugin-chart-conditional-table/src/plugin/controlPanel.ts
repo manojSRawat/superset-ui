@@ -17,7 +17,16 @@
  * under the License.
  */
 import { t, validateNonEmpty } from '@superset-ui/core';
-import { ControlPanelConfig } from '@superset-ui/chart-controls';
+import { formatSelectOptions, ControlPanelConfig } from '@superset-ui/chart-controls';
+
+export const PAGE_SIZE_OPTIONS = formatSelectOptions<number>([
+  [0, t('page_size.all')],
+  10,
+  20,
+  50,
+  100,
+  200,
+]);
 
 const config: ControlPanelConfig = {
   /**
@@ -100,7 +109,27 @@ const config: ControlPanelConfig = {
     {
       label: t('Query'),
       expanded: true,
-      controlSetRows: [['groupby'], ['metrics'], ['adhoc_filters'], ['row_limit', null]],
+      controlSetRows: [
+        ['groupby'],
+        ['metrics'],
+        ['adhoc_filters'],
+        ['row_limit', null],
+        // [
+        //   {
+        //     name: 'orderBy',
+        //     config: {
+        //       type: 'SelectControl',
+        //       label: t('Ordering'),
+        //       description: t('One or many metrics to display'),
+        //       multi: true,
+        //       default: [],
+        //       mapStateToProps: ({ datasource }) => ({
+        //         choices: datasource?.order_by_choices || [],
+        //       })
+        //     },
+        //   }
+        // ]
+      ],
     },
     {
       label: t('Filters Configuration'),
@@ -120,34 +149,39 @@ const config: ControlPanelConfig = {
             },
           },
         ],
-      ],
-    },
-    {
-      label: t('Hello Controls!'),
-      expanded: true,
-      controlSetRows: [
         [
           {
-            name: 'disable_pagination',
+            name: 'page_length',
             config: {
-              type: 'CheckboxControl',
-              default: false,
+              type: 'SelectControl',
+              freeForm: true,
               renderTrigger: true,
-              label: t('Disable Pagination'),
-              description: t('Disabled the pagination'),
+              label: t('Page Length'),
+              default: null,
+              choices: PAGE_SIZE_OPTIONS,
+              description: t('Rows per page, 0 means no pagination'),
             },
           },
+          null,
+        ],
+        [
           {
-            name: 'page_size',
+            name: 'include_search',
             config: {
-              type: 'TextControl',
-              default: 10,
+              type: 'CheckboxControl',
+              label: t('Search Box'),
               renderTrigger: true,
-              label: t('Page Size'),
-              description: t('Table page size'),
+              default: false,
+              description: t('Whether to include a client-side search box'),
             },
           },
         ],
+      ],
+    },
+    {
+      label: t('Header Configuration'),
+      expanded: true,
+      controlSetRows: [
         [
           {
             name: 'header_text',
