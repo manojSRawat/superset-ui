@@ -237,7 +237,10 @@ function StickyWrap({
           overflow: 'hidden',
         }}
       >
-        {React.cloneElement(table, mergeStyleProp(table, tableStyle), headerColgroup, thead)}
+        {
+          // @ts-ignore
+          React.cloneElement(table, mergeStyleProp(table, tableStyle), headerColgroup, thead)
+        }
         {headerTable}
       </div>
     );
@@ -257,7 +260,10 @@ function StickyWrap({
         }}
         onScroll={sticky.hasHorizontalScroll ? onScroll : undefined}
       >
-        {React.cloneElement(table, mergeStyleProp(table, tableStyle), bodyColgroup, tbody)}
+        {
+          // @ts-ignore
+          React.cloneElement(table, mergeStyleProp(table, tableStyle), bodyColgroup, tbody)
+        }
       </div>
     );
   }
