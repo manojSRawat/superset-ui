@@ -47,6 +47,7 @@ export default function getCellData(
   let align = 'left';
   let parsedValue = cellValue;
   let showTotal = false;
+  let isImage = false;
 
   if (conditions) {
     for (const condition of conditions) {
@@ -74,6 +75,9 @@ export default function getCellData(
             case 'PERCENTAGE':
               cellValue = isNaN(cellValue) || cellValue === null ? 0 : cellValue;
               parsedValue = parsedValue ? `${parsedValue}%` : '0%';
+              break;
+            case 'IMAGE':
+              isImage = true;
               break;
           }
         }
@@ -113,5 +117,6 @@ export default function getCellData(
     style: { backgroundColor: colorProperty },
     class: `text-${align}`,
     value: parsedValue,
+    isImage: isImage,
   };
 }

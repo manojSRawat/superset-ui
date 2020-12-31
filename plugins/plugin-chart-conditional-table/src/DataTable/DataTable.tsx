@@ -191,6 +191,54 @@ export default function DataTable<D extends object>({
       }
     }
   }
+  let i: Array<string> = [];
+  const [images, setImages] = React.useState(i);
+  let [imageIndex, setImageIndex] = React.useState(0);
+
+  const onImageClick = (imageString: string, index: number) => {
+    setImages(imageString.split(','));
+    imageIndex = index;
+  };
+
+  const onImageChange = (action: string) => {
+    if (images.length <= 1) {
+      return;
+    }
+    if (action === 'PREVIOUS') {
+      if (imageIndex === 0) {
+        imageIndex = images.length - 1;
+      } else {
+        imageIndex++;
+      }
+    } else {
+      if (imageIndex === images.length - 1) {
+        imageIndex = 0;
+      } else {
+        imageIndex++;
+      }
+    }
+    setImageIndex(imageIndex);
+  };
+
+  const goToImage = (index: number) => {
+    setImageIndex(index);
+  };
+
+  const renderImageThumbnail = (imageString: string) =>
+    imageString.split(',').map((image: string, index: number) => {
+      return (
+        <img
+          key={index.toString()}
+          height="50"
+          width="50"
+          src={image}
+          data-toggle="modal"
+          data-target="#exampleModal"
+          onClick={() => onImageClick(imageString, index)}
+          className="ct-img-thumbnail"
+        />
+      );
+    });
 
   const renderTable = () => (
     <table {...getTableProps({ className: tableClassName })}>
@@ -229,7 +277,7 @@ export default function DataTable<D extends object>({
                       style={{ ...cellData.style }}
                       className={cellData.class}
                     >
-                      {cellData.value}
+                      {cellData.isImage ? renderImageThumbnail(cellData.value) : cellData.value}
                     </td>
                   );
                   // return (cell.render('Cell', { key: cell.column.id }));
@@ -319,6 +367,83 @@ export default function DataTable<D extends object>({
           onPageChange={gotoPage}
         />
       ) : null}
+      <div
+        className="modal fade"
+        id="exampleModal"
+        role="dialog"
+        aria-labelledby="exampleModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="exampleModalLabel"></h5>
+              <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div id="carouselExampleIndicators" className="carousel slide" data-ride="carousel">
+                <ol className="carousel-indicators">
+                  {images.map((image: string, i: number) => {
+                    let className = '';
+                    if (i === imageIndex) {
+                      className = 'active';
+                    }
+                    return (
+                      <li
+                        data-target="#carouselExampleIndicators"
+                        key={i.toString()}
+                        data-slide-to={i}
+                        className={className}
+                        onClick={() => goToImage(i)}
+                      ></li>
+                    );
+                  })}
+                </ol>
+                <div className="carousel-inner">
+                  {images.map((image: string, i: number) => {
+                    let className = 'carousel-item';
+                    if (i === imageIndex) {
+                      className += ' active';
+                    }
+                    return (
+                      <div className={className} key={i.toString()}>
+                        <img className="d-block w-100" src={image} alt="First slide" />
+                      </div>
+                    );
+                  })}
+                </div>
+                <a
+                  className="carousel-control-prev"
+                  href="#carouselExampleIndicators"
+                  role="button"
+                  data-slide="prev"
+                  onClick={() => onImageChange('NEXT')}
+                >
+                  <span className="carousel-control-prev-icon" aria-hidden="true"></span>
+                  <span className="sr-only">Previous</span>
+                </a>
+                <a
+                  className="carousel-control-next"
+                  href="#carouselExampleIndicators"
+                  role="button"
+                  data-slide="next"
+                  onClick={() => onImageChange('PREVIOUS')}
+                >
+                  <span className="carousel-control-next-icon" aria-hidden="true"></span>
+                  <span className="sr-only">Next</span>
+                </a>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" data-dismiss="modal">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
