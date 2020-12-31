@@ -16,182 +16,150 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React, { createRef, useEffect } from 'react';
-import { styled } from '@superset-ui/core';
-import { useFilters, usePagination, useSortBy, useTable } from 'react-table';
-import {
-  ConditionalTableProps,
-  ConditionalTableStylesProps,
-  ConditionProps,
-  TableProps,
-} from './types';
+import React, { createRef, useEffect, useMemo, useCallback, useState } from 'react';
+import { t, tn, DataRecordValue, DataRecord } from '@superset-ui/core';
+import { DefaultSortTypes, ColumnInstance, ColumnWithLooseAccessor } from 'react-table';
+import { FaSort, FaSortUp as FaSortAsc, FaSortDown as FaSortDesc } from 'react-icons/fa';
+import { extent as d3Extent, max as d3Max } from 'd3-array';
+import { TableChartTransformedProps, DataType, DataColumnMeta } from './types';
+import formatValue from './utils/formatValue';
+import DataTable, {
+  DataTableProps,
+  SearchInputProps,
+  SelectPageSizeRendererProps,
+  SizeOption,
+} from './DataTable';
+import { PAGE_SIZE_OPTIONS } from './plugin/controlPanel';
+import Styles from './Styles';
 
-// The following Styles component is a <div> element, which has been styled using Emotion
-// For docs, visit https://emotion.sh/docs/styled
+type ValueRange = [number, number];
 
-// Theming variables are provided for your use via a ThemeProvider
-// imported from @superset-ui/core. For variables available, please visit
-// https://github.com/apache-superset/superset-ui/blob/master/packages/superset-ui-core/src/style/index.ts
-
-const Styles = styled.div<ConditionalTableStylesProps>`
-  // padding: ${({ theme }) => theme.gridUnit * 4}px;
-  // border-radius: ${({ theme }) => theme.gridUnit * 2}px;
-  // overflow-y: scroll;
-
-  table {
-    width: 99%;
-    min-width: auto;
-    max-width: none;
-    margin: 0;
+/**
+ * Return sortType based on data type
+ */
+function getSortTypeByDataType(dataType: DataType): DefaultSortTypes {
+  if (dataType === DataType.DateTime) {
+    return 'datetime';
   }
-
-  .main-container {
-    height: 300;
+  if (dataType === DataType.String) {
+    return 'alphanumeric';
   }
-
-  .tableWrap {
-    display: block;
-    max-width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-
-  h3 {
-    /* You can use your props to control CSS! */
-    font-size: ${({ theme, headerFontSize }) => theme.typography.sizes[headerFontSize]};
-    font-weight: ${({ theme, boldText }) => theme.typography.weights[boldText ? 'bold' : 'normal']};
-  }
-
-  .pivot_table.mt-25px {
-    margin-top: 25px;
-  }
-
-  table tr {
-    height: 50px;
-    box-shadow: 0 1px 0 0 #e0e0e0;
-  }
-
-  .dashboard-chart {
-    box-shadow: 0 0 0 1px #e0e0e0;
-    margin-top: 25px;
-  }
-
-  table th {
-    vertical-align: middle !important;
-    font-size: 14px;
-    border: 1px solid #e0e0e0;
-    padding: 10px;
-  }
-
-  table {
-    box-shadow: 0 0 0 1px #e0e0e0;
-  }
-
-  table td {
-    vertical-align: middle !important;
-    font-size: 14px;
-    border: 1px solid #e0e0e0;
-    padding: 0 10px;
-  }
-
-  table thead th svg {
-    top: 15px !important;
-  }
-
-  .flex-paginate {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  text-left {
-    text-align: left !important;
-  }
-  text-right {
-    text-align: right !important;
-  }
-  text-center {
-    text-align: center !important;
-  }
-`;
-
-function getHeader(data: Array<object>, conditions: Array<ConditionProps>) {
-  const headers: any = [];
-  Object.keys(data[0]).forEach(header => {
-    const headerObj = {
-      Header: header,
-      accessor: header,
-      disableFilters: true,
-      disableSortBy: false,
-      className: 'text-left',
-    };
-    if (conditions) {
-      for (const condition of conditions) {
-        if (condition.column === header) {
-          headerObj.disableFilters = condition.disableFilters;
-          headerObj.disableSortBy = condition.disableSortBy;
-          if (condition.alignment) {
-            headerObj.className = 'text-' + condition.alignment;
-          }
-          break;
-        }
-      }
-    }
-    headers.push(headerObj);
-  });
-
-  return headers;
-}
-
-function isConditionSatisfied(originalValue: any, comparativeValue: any, symbol: String) {
-  if (!isNaN(originalValue) && !isNaN(comparativeValue)) {
-    const oValue = parseFloat(originalValue);
-    const cValue = parseFloat(comparativeValue);
-
-    switch (symbol) {
-      case 'GREATER':
-      case '>':
-        return oValue > cValue;
-      case 'GREATER_EQUAL':
-      case '>=':
-        return oValue >= cValue;
-      case 'LESS':
-      case '<':
-        return oValue < cValue;
-      case 'LESS_EQUAL':
-      case '<=':
-        return oValue <= cValue;
-      case 'EQUAL':
-      case '=':
-        return oValue === cValue;
-      default:
-        return false;
-    }
-  } else if (typeof originalValue === 'string' && typeof comparativeValue === 'string') {
-    switch (symbol) {
-      case 'EQUAL':
-      case '=':
-        return originalValue === comparativeValue;
-      default:
-        return false;
-    }
-  } else {
-    return false;
-  }
+  return 'basic';
 }
 
 /**
- * ******************* WHAT YOU CAN BUILD HERE *******************
- *  In essence, a chart is given a few key ingredients to work with:
- *  * Data: provided via `props.data`
- *  * A DOM element
- *  * FormData (your controls!) provided as props by transformProps.ts
+ * Cell background to render columns as horizontal bar chart
  */
+function cellBar({
+  value,
+  valueRange,
+  colorPositiveNegative = false,
+  alignPositiveNegative,
+}: {
+  value: number;
+  valueRange: ValueRange;
+  colorPositiveNegative: boolean;
+  alignPositiveNegative: boolean;
+}) {
+  const [minValue, maxValue] = valueRange;
+  const r = colorPositiveNegative && value < 0 ? 150 : 0;
+  if (alignPositiveNegative) {
+    const perc = Math.abs(Math.round((value / maxValue) * 100));
+    // The 0.01 to 0.001 is a workaround for what appears to be a
+    // CSS rendering bug on flat, transparent colors
+    return (
+      `linear-gradient(to right, rgba(${r},0,0,0.2), rgba(${r},0,0,0.2) ${perc}%, ` +
+      `rgba(0,0,0,0.01) ${perc}%, rgba(0,0,0,0.001) 100%)`
+    );
+  }
+  const posExtent = Math.abs(Math.max(maxValue, 0));
+  const negExtent = Math.abs(Math.min(minValue, 0));
+  const tot = posExtent + negExtent;
+  const perc1 = Math.round((Math.min(negExtent + value, negExtent) / tot) * 100);
+  const perc2 = Math.round((Math.abs(value) / tot) * 100);
+  // The 0.01 to 0.001 is a workaround for what appears to be a
+  // CSS rendering bug on flat, transparent colors
+  return (
+    `linear-gradient(to right, rgba(0,0,0,0.01), rgba(0,0,0,0.001) ${perc1}%, ` +
+    `rgba(${r},0,0,0.2) ${perc1}%, rgba(${r},0,0,0.2) ${perc1 + perc2}%, ` +
+    `rgba(0,0,0,0.01) ${perc1 + perc2}%, rgba(0,0,0,0.001) 100%)`
+  );
+}
 
-export default function ConditionalTable(props: ConditionalTableProps) {
-  // height and width are the height and width of the DOM element as it exists in the dashboard.
-  // There is also a `data` prop, which is, of course, your DATA 🎉
-  const { data, height, width, conditions } = props;
+function SortIcon<D extends object>({ column }: { column: ColumnInstance<D> }) {
+  const { isSorted, isSortedDesc } = column;
+  let sortIcon = <FaSort />;
+  if (isSorted) {
+    sortIcon = isSortedDesc ? <FaSortDesc /> : <FaSortAsc />;
+  }
+  return sortIcon;
+}
+
+function SearchInput({ count, value, onChange }: SearchInputProps) {
+  return (
+    <span className="dt-global-filter">
+      {t('Search')}{' '}
+      <input
+        className="form-control input-sm"
+        placeholder={tn('search.num_records', count)}
+        value={value}
+        onChange={onChange}
+      />
+    </span>
+  );
+}
+
+function SelectPageSize({ options, current, onChange }: SelectPageSizeRendererProps) {
+  return (
+    <span className="dt-select-page-size form-inline">
+      {t('page_size.show')}{' '}
+      <select
+        className="form-control input-sm"
+        value={current}
+        onBlur={() => {}}
+        onChange={e => {
+          onChange(Number((e.target as HTMLSelectElement).value));
+        }}
+      >
+        {options.map(option => {
+          const [size, text] = Array.isArray(option) ? option : [option, option];
+          return (
+            <option key={size} value={size}>
+              {text}
+            </option>
+          );
+        })}
+      </select>{' '}
+      {t('page_size.entries')}
+    </span>
+  );
+}
+
+export default function ConditionalTable<D extends DataRecord = DataRecord>(
+  props: TableChartTransformedProps<D> & {
+    sticky?: DataTableProps<D>['sticky'];
+  },
+) {
+  const {
+    height,
+    width,
+    data,
+    // columns,
+    conditions,
+    columns: columnsMeta,
+    alignPositiveNegative = false,
+    colorPositiveNegative = false,
+    includeSearch = false,
+    pageSize = 0,
+    // showCellBars = false,
+    emitFilter = false,
+    sortDesc = false,
+    onChangeFilter,
+    filters: initialFilters,
+    sticky = true, // whether to use sticky header
+  } = props;
+
+  let showCellBars = false;
 
   const rootElem = createRef<HTMLDivElement>();
 
@@ -204,7 +172,143 @@ export default function ConditionalTable(props: ConditionalTableProps) {
 
   console.log('Plugin props', props);
 
-  const columns = getHeader(data, conditions);
+  // const headers = getHeader(columns, conditions);
+
+  const pageSizeOptions = useMemo(
+    () => PAGE_SIZE_OPTIONS.filter(([n, _]) => n <= 2 * data.length) as SizeOption[],
+    [data.length],
+  );
+
+  const [filters, setFilters] = useState(initialFilters);
+
+  const getValueRange = useCallback(
+    function getValueRange(key: string) {
+      if (typeof data?.[0]?.[key] === 'number') {
+        const nums = data.map(row => row[key]) as number[];
+        return (alignPositiveNegative
+          ? [0, d3Max(nums.map(Math.abs))]
+          : d3Extent(nums)) as ValueRange;
+      }
+      return null;
+    },
+    [alignPositiveNegative, data],
+  );
+
+  const isActiveFilterValue = useCallback(
+    function isActiveFilterValue(key: string, val: DataRecordValue) {
+      return !!filters && filters[key]?.includes(val);
+    },
+    [filters],
+  );
+
+  const toggleFilter = useCallback(
+    function toggleFilter(key: string, val: DataRecordValue) {
+      const updatedFilters = { ...(filters || {}) };
+      if (filters && isActiveFilterValue(key, val)) {
+        updatedFilters[key] = filters[key].filter((x: DataRecordValue) => x !== val);
+      } else {
+        updatedFilters[key] = [...(filters?.[key] || []), val];
+      }
+      setFilters(updatedFilters);
+      if (onChangeFilter) {
+        onChangeFilter(updatedFilters);
+      }
+    },
+    [filters, isActiveFilterValue, onChangeFilter],
+  );
+
+  const getColumnConfigs = useCallback(
+    (column: DataColumnMeta, i: number): ColumnWithLooseAccessor<D> => {
+      const { key, label, dataType } = column;
+      let className = '';
+      if (dataType === DataType.Number) {
+        className += ' dt-metric';
+      } else if (emitFilter) {
+        className += ' dt-is-filter';
+      }
+      let disableSortBy = false;
+      if (conditions) {
+        for (const condition of conditions) {
+          if (condition.column === key) {
+            // headerObj.disableFilters = condition.disableFilters;
+            disableSortBy = condition.disableSortBy;
+            if (condition.alignment) {
+              className += ' text-' + condition.alignment;
+            }
+            break;
+          }
+        }
+      }
+      const valueRange = showCellBars && getValueRange(key);
+      return {
+        id: String(i), // to allow duplicate column keys
+        // must use custom accessor to allow `.` in column names
+        // typing is incorrect in current version of `@types/react-table`
+        // so we ask TS not to check.
+        accessor: ((datum: D) => datum[key]) as never,
+        Cell: ({ column: col, value }: { column: ColumnInstance<D>; value: DataRecordValue }) => {
+          const [isHtml, text] = formatValue(column, value);
+          const style = {
+            background: valueRange
+              ? cellBar({
+                  value: value as number,
+                  valueRange,
+                  alignPositiveNegative,
+                  colorPositiveNegative,
+                })
+              : undefined,
+          };
+          const html = isHtml ? { __html: text } : undefined;
+          const cellProps = {
+            // show raw number in title in case of numeric values
+            title: typeof value === 'number' ? String(value) : undefined,
+            onClick: emitFilter && !valueRange ? () => toggleFilter(key, value) : undefined,
+            className: `${className}${
+              isActiveFilterValue(key, value) ? ' dt-is-active-filter' : ''
+            }`,
+            style,
+          };
+          if (html) {
+            // eslint-disable-next-line react/no-danger
+            return <td {...cellProps} dangerouslySetInnerHTML={html} />;
+          }
+          // If cellProps renderes textContent already, then we don't have to
+          // render `Cell`. This saves some time for large tables.
+          return <td {...cellProps}>{text}</td>;
+        },
+        Header: ({ column: col, title, onClick, style }) => {
+          return (
+            <th
+              title={title}
+              className={col.isSorted ? `${className || ''} is-sorted` : className}
+              style={style}
+              onClick={onClick}
+            >
+              {label}
+              {disableSortBy ? '' : <SortIcon column={col} />}
+            </th>
+          );
+        },
+        disableSortBy,
+        sortDescFirst: sortDesc,
+        sortType: getSortTypeByDataType(dataType),
+      };
+    },
+    [
+      alignPositiveNegative,
+      colorPositiveNegative,
+      emitFilter,
+      getValueRange,
+      isActiveFilterValue,
+      showCellBars,
+      sortDesc,
+      toggleFilter,
+    ],
+  );
+
+  const columns = useMemo(() => {
+    return columnsMeta.map(getColumnConfigs);
+  }, [columnsMeta, getColumnConfigs]);
 
   return (
     <Styles
@@ -213,334 +317,23 @@ export default function ConditionalTable(props: ConditionalTableProps) {
       headerFontSize={props.headerFontSize}
       height={height}
       width={width}
-      conditions={props.conditions}
-      pageSize={props.pageSize}
-      disablePagination={props.disablePagination}
     >
       <h3>{props.headerText}</h3>
-      <div style={{ width, height: height - 50, overflowY: 'auto' }}>
-        <Table
-          columns={columns}
-          data={data}
-          conditions={conditions}
-          defaultPageSize={Number(props.pageSize)}
-          disablePagination={!!props.disablePagination}
-        />
-      </div>
+      <DataTable<D>
+        conditions={conditions}
+        columns={columns}
+        data={data}
+        tableClassName="table table-striped table-condensed"
+        pageSize={pageSize}
+        pageSizeOptions={pageSizeOptions}
+        width={width}
+        height={height}
+        maxPageItemCount={width > 340 ? 9 : 7}
+        noResults={(filter: string) => t(filter ? 'No matching records found' : 'No records found')}
+        searchInput={includeSearch && SearchInput}
+        selectPageSize={pageSize !== null && SelectPageSize}
+        sticky={sticky}
+      />
     </Styles>
-  );
-}
-
-function getCellData(
-  cellKey: string,
-  cellValue: any,
-  conditions: Array<ConditionProps>,
-  isTotalRow = false,
-) {
-  let colorProperty = 'rgba(255, 255, 255, 255)';
-  let align = 'left';
-  let parsedValue = cellValue;
-  let showTotal = false;
-
-  if (conditions) {
-    for (const condition of conditions) {
-      if (condition.column === cellKey && condition.conditions) {
-        if (condition.alignment) {
-          align = condition.alignment;
-        }
-        showTotal = condition.showTotal;
-        if (condition.format) {
-          switch (condition.format) {
-            case 'IN':
-              if (parsedValue) {
-                parsedValue = parsedValue.toString();
-                let afterDecimal = '';
-                if (parsedValue.indexOf('.') > 0) {
-                  afterDecimal = parsedValue.slice(parsedValue.indexOf('.'), parsedValue.length);
-                  parsedValue = parsedValue.slice(0, Math.max(0, parsedValue.indexOf('.')));
-                }
-                parsedValue = parsedValue.replace(/(\d)(?=(\d\d)+\d$)/g, '$1,') + afterDecimal;
-              } else {
-                cellValue = 0;
-                parsedValue = 0;
-              }
-              break;
-            case 'PERCENTAGE':
-              cellValue = isNaN(cellValue) || cellValue === null ? 0 : cellValue;
-              parsedValue = parsedValue ? `${parsedValue}%` : '0%';
-              break;
-          }
-        }
-
-        for (let i = 0; i < condition.conditions.length; i++) {
-          if (
-            condition.conditions[i].initialValue &&
-            isConditionSatisfied(
-              cellValue,
-              condition.conditions[i].initialValue,
-              condition.conditions[i].initialSymbol,
-            )
-          ) {
-            if (
-              !condition.conditions[i].finalValue ||
-              (condition.conditions[i].finalValue &&
-                isConditionSatisfied(
-                  cellValue,
-                  condition.conditions[i].finalValue,
-                  condition.conditions[i].finalSymbol,
-                ))
-            ) {
-              colorProperty = `rgba(${condition.conditions[i].color.r},${condition.conditions[i].color.g},${condition.conditions[i].color.b},${condition.conditions[i].color.a})`;
-              break;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  if (isTotalRow && !showTotal) {
-    parsedValue = '';
-  }
-
-  return {
-    style: { backgroundColor: colorProperty },
-    class: `text-${align}`,
-    value: parsedValue,
-  };
-}
-
-function DefaultColumnFilter(x: any) {
-  return (
-    <input
-      value={x.column.filterValue || ''}
-      placeholder="Search"
-      onChange={e => {
-        x.column.setFilter(e.target.value || undefined);
-      }}
-    />
-  );
-}
-
-function Table(props: TableProps) {
-  const { columns, data, conditions, disablePagination } = props;
-  let { defaultPageSize } = props;
-
-  const defaultColumn = React.useMemo(
-    () => ({
-      Filter: DefaultColumnFilter,
-    }),
-    [],
-  );
-
-  // @ts-ignore
-  const {
-    headerGroups,
-    prepareRow,
-    page,
-    canPreviousPage,
-    canNextPage,
-    pageOptions,
-    pageCount,
-    gotoPage,
-    nextPage,
-    previousPage,
-    setPageSize,
-    state: { pageIndex, pageSize },
-  } = useTable(
-    {
-      columns,
-      data,
-      initialState: { pageIndex: 0, pageSize: disablePagination ? data.length : defaultPageSize },
-      defaultColumn,
-    },
-    useFilters,
-    useSortBy,
-    usePagination,
-  );
-  const total = {};
-  let showTotal = false;
-
-  data.forEach((d: any) => {
-    // eslint-disable-next-line no-restricted-syntax
-    for (const key in d) {
-      // eslint-disable-next-line no-prototype-builtins
-      if (total.hasOwnProperty(key)) {
-        if (!isNaN(Number(d[key]))) {
-          // @ts-ignore
-          total[key] += Math.round(Number(d[key]) * 100) / 100;
-          // @ts-ignore
-          total[key] = Math.round(total[key] * 100) / 100;
-        }
-      } else {
-        // @ts-ignore
-        total[key] = isNaN(Number(d[key])) ? '-' : Math.round(Number(d[key]) * 100) / 100;
-      }
-    }
-  });
-
-  if (conditions) {
-    // eslint-disable-next-line no-restricted-syntax
-    for (const condition of conditions) {
-      if (condition.showTotal) {
-        showTotal = true;
-        break;
-      }
-    }
-  }
-
-  let pages = [10, 20, 30, 40, 50];
-  if (pages.indexOf(defaultPageSize) === -1) {
-    pages = [defaultPageSize].concat(pages);
-  }
-
-  return (
-    <>
-      <div className="tableWrap">
-        <table>
-          <thead>
-            {headerGroups.map((headerGroup, headerGroupIndex: number) => (
-              <tr key={headerGroupIndex.toString()}>
-                {headerGroup.headers.map((column: any, headerIndex: number) => (
-                  <th
-                    {...column.getHeaderProps([{ className: column.className }])}
-                    key={headerIndex.toString()}
-                  >
-                    <div>
-                      <span {...column.getSortByToggleProps()}>
-                        {column.render('Header')}
-                        {/* eslint-disable-next-line no-nested-ternary */}
-                        {column.isSorted ? (column.isSortedDesc ? ' 🔽' : ' 🔼') : ''}
-                      </span>
-                    </div>
-                    {/* Render the columns filter UI */}
-                    <div>{column.canFilter ? column.render('Filter') : null}</div>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {page.map((row: any, i: number) => {
-              prepareRow(row);
-              return (
-                <tr {...row.getRowProps()} key={i.toString()}>
-                  {row.cells.map((cell: any, cellIndex: number) => {
-                    const cellData = getCellData(
-                      cell.column.id,
-                      cell.row.original[cell.column.id],
-                      conditions,
-                    );
-                    return (
-                      <td
-                        key={cellIndex.toString()}
-                        {...cell.getCellProps()}
-                        style={{ ...cellData.style }}
-                        className={cellData.class}
-                      >
-                        {cellData.value}
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
-            {showTotal ? (
-              <tr>
-                {Object.keys(total).map((cellKey: string, index) => {
-                  const cellData = getCellData(cellKey, total[cellKey], conditions, true);
-                  return (
-                    <td
-                      key={index.toString()}
-                      style={{
-                        borderTop: '2px solid black',
-                        fontWeight: 'bolder',
-                      }}
-                      className={cellData.class}
-                    >
-                      {cellData.value}
-                    </td>
-                  );
-                })}
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
-      </div>
-      {disablePagination ? null : (
-        <div>
-          <div>
-            <div className="pagination flex-paginate">
-              <div>
-                <button
-                  type="button"
-                  className="btn"
-                  disabled={!canPreviousPage}
-                  onClick={() => gotoPage(0)}
-                >
-                  {'<<'}
-                </button>{' '}
-                <button
-                  type="button"
-                  className="btn"
-                  disabled={!canPreviousPage}
-                  onClick={() => previousPage()}
-                >
-                  {'<'}
-                </button>{' '}
-              </div>
-              <div>
-                <span>
-                  Page{' '}
-                  <strong>
-                    <input
-                      type="number"
-                      defaultValue={pageIndex + 1}
-                      style={{ width: '100px' }}
-                      onChange={e => {
-                        const p = e.target.value ? Number(e.target.value) - 1 : 0;
-                        gotoPage(p);
-                      }}
-                    />{' '}
-                    of {pageOptions.length}
-                  </strong>{' '}
-                </span>{' '}
-                <select
-                  value={pageSize}
-                  onChange={e => {
-                    defaultPageSize = Number(e.target.value);
-                    setPageSize(Number(e.target.value));
-                  }}
-                >
-                  {pages.map(ps => (
-                    <option key={ps} value={ps}>
-                      Show {ps}
-                    </option>
-                  ))}
-                </select>{' '}
-              </div>
-              <div>
-                <button
-                  type="button"
-                  className="btn"
-                  disabled={!canNextPage}
-                  onClick={() => nextPage()}
-                >
-                  {'>'}
-                </button>{' '}
-                <button
-                  type="button"
-                  className="btn"
-                  disabled={!canNextPage}
-                  onClick={() => gotoPage(pageCount - 1)}
-                >
-                  {'>>'}
-                </button>{' '}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
   );
 }
