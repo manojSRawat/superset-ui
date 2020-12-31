@@ -196,8 +196,8 @@ export default function DataTable<D extends object>({
   let [imageIndex, setImageIndex] = React.useState(0);
 
   const onImageClick = (imageString: string, index: number) => {
+    setImageIndex(index);
     setImages(imageString.split(','));
-    imageIndex = index;
   };
 
   const onImageChange = (action: string) => {
@@ -241,11 +241,13 @@ export default function DataTable<D extends object>({
     });
 
   const renderTable = () => (
+    // @ts-ignore
     <table {...getTableProps({ className: tableClassName })}>
       <thead>
         {headerGroups.map(headerGroup => {
           const { key: headerGroupKey, ...headerGroupProps } = headerGroup.getHeaderGroupProps();
           return (
+            // @ts-ignore
             <tr key={headerGroupKey || headerGroup.id} {...headerGroupProps}>
               {headerGroup.headers.map(column => {
                 return column.render('Header', {
@@ -257,62 +259,67 @@ export default function DataTable<D extends object>({
           );
         })}
       </thead>
-      <tbody {...getTableBodyProps()}>
-        {page && page.length > 0 ? (
-          page.map(row => {
-            prepareRow(row);
-            const { key: rowKey, ...rowProps } = row.getRowProps();
-            return (
-              <tr key={rowKey || row.id} {...rowProps}>
-                {row.cells.map((cell: any, index: number) => {
-                  const cellData = getCellData(
-                    Object.keys(cell.row.original)[cell.column.id],
-                    cell.value,
-                    conditions,
-                  );
-                  return (
-                    <td
-                      key={index.toString()}
-                      {...cell.getCellProps()}
-                      style={{ ...cellData.style }}
-                      className={cellData.class}
-                    >
-                      {cellData.isImage ? renderImageThumbnail(cellData.value) : cellData.value}
-                    </td>
-                  );
-                  // return (cell.render('Cell', { key: cell.column.id }));
-                })}
-              </tr>
-            );
-          })
-        ) : (
-          <tr>
-            <td className="dt-no-results" colSpan={columns.length}>
-              {typeof noResults === 'function' ? noResults(filterValue as string) : noResults}
-            </td>
-          </tr>
-        )}
-        {showTotal ? (
-          <tr>
-            {Object.keys(total).map((cellKey: string, index) => {
-              const cellData = getCellData(cellKey, total[cellKey], conditions, true);
-
+      {
+        // @ts-ignore
+        <tbody {...getTableBodyProps()}>
+          {page && page.length > 0 ? (
+            page.map(row => {
+              prepareRow(row);
+              const { key: rowKey, ...rowProps } = row.getRowProps();
               return (
-                <td
-                  key={index.toString()}
-                  style={{
-                    borderTop: '2px solid black',
-                    fontWeight: 'bolder',
-                  }}
-                  className={cellData.class}
-                >
-                  {cellData.value}
-                </td>
+                // @ts-ignore
+                <tr key={rowKey || row.id} {...rowProps}>
+                  {row.cells.map((cell: any, index: number) => {
+                    const cellData = getCellData(
+                      Object.keys(cell.row.original)[cell.column.id],
+                      cell.value,
+                      conditions,
+                    );
+                    return (
+                      <td
+                        key={index.toString()}
+                        {...cell.getCellProps()}
+                        style={{ ...cellData.style }}
+                        className={cellData.class}
+                      >
+                        {cellData.isImage ? renderImageThumbnail(cellData.value) : cellData.value}
+                      </td>
+                    );
+                    // return (cell.render('Cell', { key: cell.column.id }));
+                  })}
+                </tr>
               );
-            })}
-          </tr>
-        ) : null}
-      </tbody>
+            })
+          ) : (
+            <tr>
+              <td className="dt-no-results" colSpan={columns.length}>
+                {typeof noResults === 'function' ? noResults(filterValue as string) : noResults}
+              </td>
+            </tr>
+          )}
+          {showTotal ? (
+            <tr>
+              {Object.keys(total).map((cellKey: string, index) => {
+                // @ts-ignore
+                const cellData = getCellData(cellKey, total[cellKey], conditions, true);
+
+                return (
+                  <td
+                    key={index.toString()}
+                    style={{
+                      borderTop: '2px solid black',
+                      fontWeight: 'bolder',
+                    }}
+                    className={cellData.class}
+                  >
+                    {cellData.value}
+                  </td>
+                );
+              })}
+            </tr>
+          ) : null}
+        </tbody>
+      }
     </table>
   );
 
