@@ -29,9 +29,18 @@
     "@superset-ui/chart-controls": "^0.15.2",
     "@superset-ui/core": "^0.15.2",
     "@types/react-table": "^7.0.25",
-    "react-table": "^7.6.1"
+    "@types/match-sorter": "^4.0.0",
+    "@types/d3-array": "^2.0.0",
+    "react-table": "^7.6.1",
+    "d3-array": "^2.4.0",
+    "match-sorter": "^4.1.0",
+    "memoize-one": "^5.1.1",
+    "react-icons": "^3.10.0",
+    "regenerator-runtime": "^0.13.5",
+    "xss": "^1.0.6"
   },
   "peerDependencies": {
+    "@types/react": "*",
     "react": "^16.13.1"
   },
   "devDependencies": {
