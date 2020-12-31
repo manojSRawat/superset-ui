@@ -69,6 +69,7 @@ export default React.memo(
   ) {
     const pageItems = generatePageItems(pageCount, currentPage, maxPageItemCount);
     return (
+      // @ts-ignore
       <div ref={ref} className="dt-pagination" style={style}>
         <ul className="pagination pagination-sm">
           {pageItems.map((item, i) =>

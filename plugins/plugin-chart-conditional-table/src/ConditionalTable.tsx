@@ -144,7 +144,6 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
     height,
     width,
     data,
-    // columns,
     conditions,
     columns: columnsMeta,
     alignPositiveNegative = false,
@@ -163,16 +162,12 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
 
   const rootElem = createRef<HTMLDivElement>();
 
-  // Often, you just want to get a hold of the DOM and go nuts.
-  // Here, you can do that with createRef, and the useEffect hook.
   useEffect(() => {
-    const root = rootElem.current as HTMLElement;
-    console.log('Plugin element', root);
+    // const root = rootElem.current as HTMLElement;
+    // console.log('Plugin element', root);
   });
 
-  console.log('Plugin props', props);
-
-  // const headers = getHeader(columns, conditions);
+  // console.log('Plugin props', props);
 
   const pageSizeOptions = useMemo(
     () => PAGE_SIZE_OPTIONS.filter(([n, _]) => n <= 2 * data.length) as SizeOption[],
