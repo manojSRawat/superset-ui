@@ -18,11 +18,13 @@
  */
 export default function transformProps(chartProps) {
   const { width, height, formData, queriesData } = chartProps;
-  const { linearColorScheme, numberFormat, selectCountry } = formData;
+  const { linearColorScheme, numberFormat, selectCountry, conditions, legendAlignemnt  } = formData;
 
   return {
     width,
     height,
+    conditions,
+    legendAlignemnt,
     data: queriesData[0].data,
     country: selectCountry ? String(selectCountry).toLowerCase() : null,
     linearColorScheme,
