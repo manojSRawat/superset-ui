@@ -351,7 +351,7 @@ export default function DataTable<D extends object>({
               ) : null}
             </div>
             {searchInput ? (
-              <div className="col-sm-6">
+              <div className="col-sm-6 text-right">
                 <GlobalFilter<D>
                   searchInput={typeof searchInput === 'boolean' ? undefined : searchInput}
                   preGlobalFilteredRows={preGlobalFilteredRows}
@@ -416,7 +416,11 @@ export default function DataTable<D extends object>({
                     }
                     return (
                       <div className={className} key={i.toString()}>
-                        <img className="d-block w-100" src={image} alt="First slide" />
+                        <img
+                          className="d-block w-100 ct-img"
+                          src={image}
+                          alt={image.substring(image.lastIndexOf('/'))}
+                        />
                       </div>
                     );
                   })}

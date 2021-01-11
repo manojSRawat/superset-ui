@@ -72,6 +72,45 @@ const config: ControlPanelConfig = {
         ['linear_color_scheme'],
       ],
     },
+    {
+      label: t('Filters Configuration'),
+      expanded: true,
+      controlSetRows: [
+        [
+          {
+            name: 'legend_alignemnt',
+            config: {
+              type: 'SelectControl',
+              freeForm: true,
+              renderTrigger: true,
+              label: t('Legend Alignment'),
+              default: 'left',
+              choices: [
+                ['left', 'Left'],
+                ['center', 'Center'],
+                ['right', 'Right'],
+              ],
+              description: t('Rows per page, 0 means no pagination'),
+            },
+          },
+          null,
+        ],
+        [
+          {
+            name: 'conditions',
+            config: {
+              renderTrigger: false,
+              type: 'CollectionControl',
+              label: 'Filters',
+              description: t('Filter configuration for the filter box'),
+              validators: [],
+              controlName: 'ConditionalTableFilterBox',
+              mapStateToProps: ({ datasource }) => ({ datasource }),
+            },
+          },
+        ],
+      ],
+    },
   ],
   controlOverrides: {
     entity: {
