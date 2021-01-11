@@ -59,3 +59,15 @@
   cursor: pointer;
   stroke: #eee;
 }
+
+.ledgend-box {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  margin: 0 5px;
+}
+
+.ledgend-box-wrapper {
+  display: inline-flex!important;
+  align-items: center;
+}
