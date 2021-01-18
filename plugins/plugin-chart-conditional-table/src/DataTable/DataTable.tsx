@@ -224,8 +224,11 @@ export default function DataTable<D extends object>({
     setImageIndex(index);
   };
 
-  const renderImageThumbnail = (imageString: string) =>
-    imageString.split(',').map((image: string, index: number) => {
+  const renderImageThumbnail = (imageString: string) => {
+    if (!imageString) {
+      return '';
+    }
+    return imageString.split(',').map((image: string, index: number) => {
       return (
         <img
           key={index.toString()}
@@ -239,6 +242,7 @@ export default function DataTable<D extends object>({
         />
       );
     });
+  };
 
   const renderTable = () => (
     // @ts-ignore
