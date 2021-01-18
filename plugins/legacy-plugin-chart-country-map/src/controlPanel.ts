@@ -105,6 +105,7 @@ const config: ControlPanelConfig = {
               description: t('Filter configuration for the filter box'),
               validators: [],
               controlName: 'ConditionalTableFilterBox',
+              // @ts-ignore
               mapStateToProps: ({ datasource }) => ({ datasource }),
             },
           },
