@@ -295,6 +295,7 @@ export default function DataTable<D extends object>({
     });
     let x = HeaderTop({ parsedGroups });
     return (
+      // @ts-ignore
       <table {...getTableProps({ className: tableClassName })}>
         <thead className={'header-conditional-table'}>
           {x}
