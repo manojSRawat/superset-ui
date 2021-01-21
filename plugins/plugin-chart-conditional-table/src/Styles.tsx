@@ -212,4 +212,8 @@ export default styled.div<ConditionalTableStylesProps>`
     max-width: 100%;
     max-height: 500px;
   }
+
+  .remark {
+    font-size: 20px;
+  }
 `;
