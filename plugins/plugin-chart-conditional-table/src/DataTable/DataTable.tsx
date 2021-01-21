@@ -58,10 +58,12 @@ export interface DataTableProps<D extends object> extends TableOptions<D> {
   sticky?: boolean;
   wrapperRef?: MutableRefObject<HTMLDivElement>;
   conditions: Array<ConditionProps>;
+  groups: Array<any>;
+  showMainHeader: Boolean;
 }
 
-let HH = null;
-const HeaderTop = ({ parsedGroups }) => {
+let HH: any = null;
+const HeaderTop = ({ parsedGroups }: { parsedGroups: any }) => {
   window.localStorage.setItem('parsedGroups', JSON.stringify(parsedGroups));
   // const [debounce, setDebounce] = React.useState(null);
   return (
@@ -217,10 +219,10 @@ export default function DataTable<D extends object>({
   const [remarks, setRemarks] = React.useState(i);
   let [imageIndex, setImageIndex] = React.useState(0);
 
-  const onImageClick = (imageString: string, index: number, cellData) => {
+  const onImageClick = (imageString: string, index: number, remarkString: string | undefined) => {
     setImageIndex(index);
     setImages(imageString.split(','));
-    setRemarks(cellData);
+    setRemarks(remarkString ? remarkString.split(',') : []);
   };
 
   const onImageChange = (action: string) => {
@@ -231,7 +233,7 @@ export default function DataTable<D extends object>({
       if (imageIndex === 0) {
         imageIndex = images.length - 1;
       } else {
-        imageIndex++;
+        imageIndex--;
       }
     } else {
       if (imageIndex === images.length - 1) {
@@ -247,7 +249,7 @@ export default function DataTable<D extends object>({
     setImageIndex(index);
   };
 
-  const renderImageThumbnail = (imageString: string, imageParams: object, cellData: object) => {
+  const renderImageThumbnail = (imageString: string, imageParams: any, cellData: any) => {
     if (!imageString) {
       return '';
     }
@@ -260,7 +262,7 @@ export default function DataTable<D extends object>({
           src={image}
           data-toggle="modal"
           data-target="#exampleModal"
-          onClick={() => onImageClick(imageString, index, cellData)}
+          onClick={() => onImageClick(imageString, index, cellData[imageParams.remarkColumn])}
           className="ct-img-thumbnail"
         />
       );
@@ -287,17 +289,11 @@ export default function DataTable<D extends object>({
     HH = null;
     HH = lazy(() => {
       return new Promise(resolve => {
+        // @ts-ignore
         setTimeout(() => resolve(import('./header-top.js')), 300);
       });
     });
     let x = HeaderTop({ parsedGroups });
-    // let x = showMainHeader ? HeaderTop({ parsedGroups }) : HeaderTop({ parsedGroups: [] });
-    // setTimeout(()=>{
-    //   x = <tr>
-    //     <th style={{ textAlign: 'center' }} colSpan="2">Hello</th>
-    //     <th style={{ textAlign: 'center' }}>Hello2</th>
-    //   </tr>
-    // }, 100);
     return (
       <table {...getTableProps({ className: tableClassName })}>
         <thead className={'header-conditional-table'}>
@@ -474,28 +470,24 @@ export default function DataTable<D extends object>({
                   })}
                 </ol>
                 <div className="carousel-inner">
-                  {images.map((image: string, i: number) => {
-                    let className = 'carousel-item';
-                    if (i === imageIndex) {
-                      className += ' active';
-                    }
-                    return (
-                      <div className={className} key={i.toString()}>
-                        <img
-                          className="d-block w-100 ct-img"
-                          src={image}
-                          alt={image.substring(image.lastIndexOf('/'))}
-                        />
-                      </div>
-                    );
-                  })}
+                  {images.length ? (
+                    <div className="carousel-item active">
+                      <img
+                        className="d-block w-100 ct-img"
+                        src={images[imageIndex]}
+                        alt={images[imageIndex].substring(images[imageIndex].lastIndexOf('/'))}
+                      />
+                    </div>
+                  ) : (
+                    ''
+                  )}
                 </div>
                 <a
                   className="carousel-control-prev"
                   href="#carouselExampleIndicators"
                   role="button"
                   data-slide="prev"
-                  onClick={() => onImageChange('NEXT')}
+                  onClick={() => onImageChange('PREVIOUS')}
                 >
                   <span className="carousel-control-prev-icon" aria-hidden="true"></span>
                   <span className="sr-only">Previous</span>
@@ -505,12 +497,17 @@ export default function DataTable<D extends object>({
                   href="#carouselExampleIndicators"
                   role="button"
                   data-slide="next"
-                  onClick={() => onImageChange('PREVIOUS')}
+                  onClick={() => onImageChange('NEXT')}
                 >
                   <span className="carousel-control-next-icon" aria-hidden="true"></span>
                   <span className="sr-only">Next</span>
                 </a>
               </div>
+              {remarks.length && remarks.length > imageIndex ? (
+                <div className="remark">Remark: {remarks[imageIndex]}</div>
+              ) : (
+                ''
+              )}
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-secondary" data-dismiss="modal">
