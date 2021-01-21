@@ -48,7 +48,13 @@ export default function getCellData(
   let parsedValue = cellValue;
   let showTotal = false;
   let isImage = false;
+  let imageParams = {
+    height: 50,
+    width: 50,
+    remarkColumn: null,
+  };
 
+  console.log(conditions, ' ============--------------');
   if (conditions) {
     for (const condition of conditions) {
       if (condition.column === cellKey && condition.conditions) {
@@ -56,6 +62,15 @@ export default function getCellData(
           align = condition.alignment;
         }
         showTotal = condition.showTotal;
+        if (condition.thumbnailHeight) {
+          imageParams.height = condition.thumbnailHeight;
+        }
+        if (condition.thumbnailWidth) {
+          imageParams.width = condition.thumbnailWidth;
+        }
+        if (condition.remarkColumn) {
+          imageParams.remarkColumn = condition.remarkColumn;
+        }
         if (condition.format) {
           switch (condition.format) {
             case 'IN':
@@ -117,6 +132,7 @@ export default function getCellData(
     style: { backgroundColor: colorProperty },
     class: `text-${align}`,
     value: parsedValue,
-    isImage: isImage,
+    isImage,
+    imageParams,
   };
 }

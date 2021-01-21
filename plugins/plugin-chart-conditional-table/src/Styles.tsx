@@ -8,7 +8,18 @@ export default styled.div<ConditionalTableStylesProps>`
     max-width: none;
     margin: 0;
   }
+  .header-conditional-table {
+  }
 
+  .header-conditional-table > tr > th {
+    position: relative;
+    padding-right: 40px;
+  }
+  .header-conditional-table > tr > th > svg {
+    right: 10px;
+    top: 40% !important;
+    position: absolute;
+  }
   .main-container {
     height: 300;
   }
