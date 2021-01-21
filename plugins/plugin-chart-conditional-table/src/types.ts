@@ -53,6 +53,8 @@ export interface TableChartFormData {
   tableFilter?: boolean;
   timeGrainSqla?: TimeGranularity;
   conditions: Array<ConditionProps>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  headerGrouping: Array<any>;
 }
 
 export interface TableChartData<D extends DataRecord = DataRecord> {
@@ -107,6 +109,9 @@ export interface ConditionProps {
   showTotal: boolean;
   disableFilters: boolean;
   disableSortBy: boolean;
+  thumbnailHeight: number;
+  thumbnailWidth: number;
+  remarkColumn: string;
   conditions: Array<ConditionColumnProps>;
 }
 
@@ -146,6 +151,8 @@ export interface TableChartTransformedProps<D extends DataRecord = DataRecord> {
   headerText: string;
   boldText: boolean;
   data: D[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  groups: any[];
   columns: DataColumnMeta[];
   metrics?: (keyof D)[];
   percentMetrics?: (keyof D)[];

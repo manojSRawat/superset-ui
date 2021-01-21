@@ -16,7 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React, { useCallback, useRef, ReactNode, HTMLProps, MutableRefObject } from 'react';
+import React, {
+  useCallback,
+  useRef,
+  ReactNode,
+  HTMLProps,
+  MutableRefObject,
+  Suspense,
+  lazy,
+} from 'react';
 import {
   useTable,
   usePagination,
@@ -52,6 +60,17 @@ export interface DataTableProps<D extends object> extends TableOptions<D> {
   conditions: Array<ConditionProps>;
 }
 
+let HH = null;
+const HeaderTop = ({ parsedGroups }) => {
+  window.localStorage.setItem('parsedGroups', JSON.stringify(parsedGroups));
+  // const [debounce, setDebounce] = React.useState(null);
+  return (
+    <Suspense fallback={<div>...</div>}>
+      <HH parsedGroups={parsedGroups} />
+    </Suspense>
+  );
+};
+
 export interface RenderHTMLCellProps extends HTMLProps<HTMLTableCellElement> {
   cellContent: ReactNode;
 }
@@ -59,6 +78,8 @@ export interface RenderHTMLCellProps extends HTMLProps<HTMLTableCellElement> {
 // Be sure to pass our updateMyData and the skipReset option
 export default function DataTable<D extends object>({
   conditions,
+  groups,
+  showMainHeader,
   tableClassName,
   columns,
   data,
@@ -193,11 +214,13 @@ export default function DataTable<D extends object>({
   }
   let i: Array<string> = [];
   const [images, setImages] = React.useState(i);
+  const [remarks, setRemarks] = React.useState(i);
   let [imageIndex, setImageIndex] = React.useState(0);
 
-  const onImageClick = (imageString: string, index: number) => {
+  const onImageClick = (imageString: string, index: number, cellData) => {
     setImageIndex(index);
     setImages(imageString.split(','));
+    setRemarks(cellData);
   };
 
   const onImageChange = (action: string) => {
@@ -224,7 +247,7 @@ export default function DataTable<D extends object>({
     setImageIndex(index);
   };
 
-  const renderImageThumbnail = (imageString: string) => {
+  const renderImageThumbnail = (imageString: string, imageParams: object, cellData: object) => {
     if (!imageString) {
       return '';
     }
@@ -232,100 +255,138 @@ export default function DataTable<D extends object>({
       return (
         <img
           key={index.toString()}
-          height="50"
-          width="50"
+          height={imageParams.height}
+          width={imageParams.width}
           src={image}
           data-toggle="modal"
           data-target="#exampleModal"
-          onClick={() => onImageClick(imageString, index)}
+          onClick={() => onImageClick(imageString, index, cellData)}
           className="ct-img-thumbnail"
         />
       );
     });
   };
 
-  const renderTable = () => (
+  const renderTable = () => {
     // @ts-ignore
-    <table {...getTableProps({ className: tableClassName })}>
-      <thead>
-        {headerGroups.map(headerGroup => {
-          const { key: headerGroupKey, ...headerGroupProps } = headerGroup.getHeaderGroupProps();
-          return (
-            // @ts-ignore
-            <tr key={headerGroupKey || headerGroup.id} {...headerGroupProps}>
-              {headerGroup.headers.map(column => {
-                return column.render('Header', {
-                  key: column.id,
-                  ...column.getSortByToggleProps(),
-                });
-              })}
-            </tr>
-          );
-        })}
-      </thead>
-      {
-        // @ts-ignore
-        <tbody {...getTableBodyProps()}>
-          {page && page.length > 0 ? (
-            page.map(row => {
-              prepareRow(row);
-              const { key: rowKey, ...rowProps } = row.getRowProps();
-              return (
-                // @ts-ignore
-                <tr key={rowKey || row.id} {...rowProps}>
-                  {row.cells.map((cell: any, index: number) => {
-                    const cellData = getCellData(
-                      Object.keys(cell.row.original)[cell.column.id],
-                      cell.value,
-                      conditions,
-                    );
-                    return (
-                      <td
-                        key={index.toString()}
-                        {...cell.getCellProps()}
-                        style={{ ...cellData.style }}
-                        className={cellData.class}
-                      >
-                        {cellData.isImage ? renderImageThumbnail(cellData.value) : cellData.value}
-                      </td>
-                    );
-                    // return (cell.render('Cell', { key: cell.column.id }));
-                  })}
-                </tr>
-              );
-            })
-          ) : (
-            <tr>
-              <td className="dt-no-results" colSpan={columns.length}>
-                {typeof noResults === 'function' ? noResults(filterValue as string) : noResults}
-              </td>
-            </tr>
-          )}
-          {showTotal ? (
-            <tr>
-              {Object.keys(total).map((cellKey: string, index) => {
-                // @ts-ignore
-                const cellData = getCellData(cellKey, total[cellKey], conditions, true);
+    const parsedGroups: any[] = [];
 
+    if (groups) {
+      groups.forEach((group: any) => {
+        if (group.children) {
+          const g = { ...group, span: 0, initialValue: 0, column: group.column };
+          group.children.forEach((child: any) => {
+            if (child.childKey) {
+              g.span++;
+            }
+          });
+          parsedGroups.push(g);
+        }
+      });
+    }
+    HH = null;
+    HH = lazy(() => {
+      return new Promise(resolve => {
+        setTimeout(() => resolve(import('./header-top.js')), 300);
+      });
+    });
+    let x = HeaderTop({ parsedGroups });
+    // let x = showMainHeader ? HeaderTop({ parsedGroups }) : HeaderTop({ parsedGroups: [] });
+    // setTimeout(()=>{
+    //   x = <tr>
+    //     <th style={{ textAlign: 'center' }} colSpan="2">Hello</th>
+    //     <th style={{ textAlign: 'center' }}>Hello2</th>
+    //   </tr>
+    // }, 100);
+    return (
+      <table {...getTableProps({ className: tableClassName })}>
+        <thead className={'header-conditional-table'}>
+          {x}
+          {headerGroups.map(headerGroup => {
+            const { key: headerGroupKey, ...headerGroupProps } = headerGroup.getHeaderGroupProps();
+            return (
+              // @ts-ignore
+              <tr key={headerGroupKey || headerGroup.id} {...headerGroupProps}>
+                {headerGroup.headers.map(column => {
+                  return column.render('Header', {
+                    key: column.id,
+                    ...column.getSortByToggleProps(),
+                  });
+                })}
+              </tr>
+            );
+          })}
+        </thead>
+        {
+          // @ts-ignore
+          <tbody {...getTableBodyProps()}>
+            {page && page.length > 0 ? (
+              page.map(row => {
+                prepareRow(row);
+                const { key: rowKey, ...rowProps } = row.getRowProps();
                 return (
-                  <td
-                    key={index.toString()}
-                    style={{
-                      borderTop: '2px solid black',
-                      fontWeight: 'bolder',
-                    }}
-                    className={cellData.class}
-                  >
-                    {cellData.value}
-                  </td>
+                  // @ts-ignore
+                  <tr key={rowKey || row.id} {...rowProps}>
+                    {row.cells.map((cell: any, index: number) => {
+                      const cellData = getCellData(
+                        Object.keys(cell.row.original)[cell.column.id],
+                        cell.value,
+                        conditions,
+                      );
+                      return (
+                        <td
+                          key={index.toString()}
+                          {...cell.getCellProps()}
+                          style={{ ...cellData.style }}
+                          className={cellData.class}
+                        >
+                          {cellData.isImage
+                            ? renderImageThumbnail(
+                                cellData.value,
+                                cellData.imageParams,
+                                cell.row.original,
+                              )
+                            : cellData.value}
+                        </td>
+                      );
+                      // return (cell.render('Cell', { key: cell.column.id }));
+                    })}
+                  </tr>
                 );
-              })}
-            </tr>
-          ) : null}
-        </tbody>
-      }
-    </table>
-  );
+              })
+            ) : (
+              <tr>
+                <td className="dt-no-results" colSpan={columns.length}>
+                  {typeof noResults === 'function' ? noResults(filterValue as string) : noResults}
+                </td>
+              </tr>
+            )}
+            {showTotal ? (
+              <tr>
+                {Object.keys(total).map((cellKey: string, index) => {
+                  // @ts-ignore
+                  const cellData = getCellData(cellKey, total[cellKey], conditions, true);
+
+                  return (
+                    <td
+                      key={index.toString()}
+                      style={{
+                        borderTop: '2px solid black',
+                        fontWeight: 'bolder',
+                      }}
+                      className={cellData.class}
+                    >
+                      {cellData.value}
+                    </td>
+                  );
+                })}
+              </tr>
+            ) : null}
+          </tbody>
+        }
+      </table>
+    );
+  };
 
   // force upate the pageSize when it's been update from the initial state
   if (
@@ -342,7 +403,7 @@ export default function DataTable<D extends object>({
     <div ref={wrapperRef} style={{ width: initialWidth, height: initialHeight }}>
       {hasGlobalControl ? (
         <div ref={globalControlRef} className="form-inline dt-controls">
-          <div className="row">
+          <div className="row" style={{ margin: 0 }}>
             <div className="col-sm-6">
               {hasPagination ? (
                 <SelectPageSize
