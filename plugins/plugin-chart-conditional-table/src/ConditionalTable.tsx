@@ -143,6 +143,7 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
   const {
     height,
     width,
+    groups,
     data,
     conditions,
     columns: columnsMeta,
@@ -228,7 +229,7 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
             // headerObj.disableFilters = condition.disableFilters;
             disableSortBy = condition.disableSortBy;
             if (condition.alignment) {
-              className += ' text-' + condition.alignment;
+              className += ` text-${condition.alignment}`;
             }
             break;
           }
@@ -305,6 +306,7 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
     return columnsMeta.map(getColumnConfigs);
   }, [columnsMeta, getColumnConfigs]);
 
+  console.log(columnsMeta);
   return (
     <Styles
       ref={rootElem}
@@ -314,10 +316,11 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
       width={width}
     >
       <h3>{props.headerText}</h3>
-      <DataTable<D>
+      <DataTableWrapper
         conditions={conditions}
         columns={columns}
         data={data}
+        groups={groups || []}
         tableClassName="table table-striped table-condensed"
         pageSize={pageSize}
         pageSizeOptions={pageSizeOptions}
@@ -331,4 +334,32 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
       />
     </Styles>
   );
+}
+
+class DataTableWrapper extends React.Component {
+  timeout = null;
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      showTable: true,
+    };
+  }
+
+  componentWillReceiveProps(nextProps: any, nextContext: any): void {
+    this.setState({ showTable: false });
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+    }
+    this.timeout = setTimeout(() => {
+      this.setState({ showTable: true });
+      this.timeout = null;
+    }, 300);
+  }
+
+  render() {
+    const { showTable } = this.state;
+    // @ts-ignore
+    return <DataTable showMainHeader={showTable} {...this.props} />;
+  }
 }

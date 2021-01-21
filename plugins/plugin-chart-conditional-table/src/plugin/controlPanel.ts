@@ -151,6 +151,20 @@ const config: ControlPanelConfig = {
         ],
         [
           {
+            name: 'headerGrouping',
+            config: {
+              renderTrigger: true,
+              type: 'CollectionControl',
+              label: 'Header Groups',
+              description: t('Grouping configuration for the filter box'),
+              validators: [],
+              controlName: 'ConditionalTableParentHeaderBox',
+              mapStateToProps: ({ datasource }) => ({ datasource }),
+            },
+          },
+        ],
+        [
+          {
             name: 'page_length',
             config: {
               type: 'SelectControl',

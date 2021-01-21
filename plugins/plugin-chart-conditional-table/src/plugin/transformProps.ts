@@ -51,6 +51,7 @@ function isTimeColumn(key: string) {
 }
 
 const REGEXP_DATETIME = /^\d{4}-[01]\d-[03]\d/;
+
 function isTimeType(key: string, data: DataRecord[] = []) {
   return (
     isTimeColumn(key) ||
@@ -212,10 +213,11 @@ export default function transformProps(chartProps: TableChartProp) {
     includeSearch = false,
     pageLength: pageSize = 0,
     tableFilter,
+    headerGrouping,
     orderDesc: sortDesc = false,
   } = formData;
 
-  let tableChartProps: any = Object.assign({}, JSON.parse(JSON.stringify(chartProps)));
+  const tableChartProps: any = { ...JSON.parse(JSON.stringify(chartProps)) };
 
   tableChartProps.queryData.data = {
     records: queryData.data,
@@ -238,6 +240,7 @@ export default function transformProps(chartProps: TableChartProp) {
     percentMetrics,
     alignPositiveNegative,
     colorPositiveNegative,
+    groups: headerGrouping,
     showCellBars,
     sortDesc,
     includeSearch,
