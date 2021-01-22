@@ -10,7 +10,16 @@ export default function HeaderTop() {
         </th>,
       );
     });
-    return <tr>{childData}</tr>;
+    return (
+      <tr
+        style={{
+          height: childData.length ? 'auto' : '0px',
+          overflow: childData.length ? 'auto' : 'hidden',
+        }}
+      >
+        {childData}
+      </tr>
+    );
   }
   return <></>;
 }
