@@ -1,6 +1,5 @@
 import { styled } from '@superset-ui/core';
 import { ConditionalTableStylesProps } from './types';
-
 export default styled.div<ConditionalTableStylesProps>`
   table {
     width: 99%;
