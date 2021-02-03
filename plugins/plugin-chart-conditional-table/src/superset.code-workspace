@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "../../../../incubator-superset/superset-frontend"
+		},
+		{
+			"path": "../../.."
+		}
+	],
+	"settings": {}
+}

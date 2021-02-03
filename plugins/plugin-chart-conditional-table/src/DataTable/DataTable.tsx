@@ -485,23 +485,19 @@ export default function DataTable<D extends object>({
                 </div>
                 <a
                   className="carousel-control-prev"
-                  href="#carouselExampleIndicators"
                   role="button"
                   data-slide="prev"
                   onClick={() => onImageChange('PREVIOUS')}
                 >
-                  <span className="carousel-control-prev-icon" aria-hidden="true"></span>
-                  <span className="sr-only">Previous</span>
+                  A
                 </a>
                 <a
                   className="carousel-control-next"
-                  href="#carouselExampleIndicators"
                   role="button"
                   data-slide="next"
                   onClick={() => onImageChange('NEXT')}
                 >
-                  <span className="carousel-control-next-icon" aria-hidden="true"></span>
-                  <span className="sr-only">Next</span>
+                  B
                 </a>
               </div>
               {remarks.length && remarks.length > imageIndex ? (
