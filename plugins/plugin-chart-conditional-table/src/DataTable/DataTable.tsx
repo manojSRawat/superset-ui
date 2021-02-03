@@ -84,7 +84,7 @@ export default function DataTable<D extends object>({
   columns,
   data,
   width: initialWidth = '100%',
-  height: initialHeight = 300,
+  height: initialHeight = 400,
   pageSize: initialPageSize = 0,
   initialState: initialState_ = {},
   pageSizeOptions = [10, 25, 50, 100, 200],
@@ -298,6 +298,7 @@ export default function DataTable<D extends object>({
     //     <th style={{ textAlign: 'center' }}>Hello2</th>
     //   </tr>
     // }, 100);
+    console.log({ ...getTableProps({ className: tableClassName }) });
     return (
       <table {...getTableProps({ className: tableClassName })}>
         <thead className={'header-conditional-table'}>
@@ -399,8 +400,25 @@ export default function DataTable<D extends object>({
     setPageSize(initialPageSize);
   }
 
+  if (
+    typeof window !== 'undefined' &&
+    document.getElementsByClassName('table-dynamic-wrapper') &&
+    document.getElementsByClassName('table-dynamic-wrapper')[0] &&
+    document.getElementsByClassName('table-dynamic-wrapper')[0].firstElementChild
+  ) {
+    setTimeout(() => {
+      document.getElementsByClassName('table-dynamic-wrapper')[0].firstElementChild.style.height =
+        document.getElementsByClassName('table-dynamic-wrapper')[0].firstElementChild.offsetHeight +
+        70 +
+        'px';
+    }, 100);
+  }
   return (
-    <div ref={wrapperRef} style={{ width: initialWidth, height: initialHeight }}>
+    <div
+      className={'table-dynamic-wrapper'}
+      ref={wrapperRef}
+      style={{ width: initialWidth, height: initialHeight }}
+    >
       {hasGlobalControl ? (
         <div ref={globalControlRef} className="form-inline dt-controls">
           <div className="row" style={{ margin: 0 }}>
