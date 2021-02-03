@@ -306,7 +306,6 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
     return columnsMeta.map(getColumnConfigs);
   }, [columnsMeta, getColumnConfigs]);
 
-  console.log(columnsMeta);
   return (
     <Styles
       ref={rootElem}
