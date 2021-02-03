@@ -51,10 +51,9 @@ export default function getCellData(
   let imageParams = {
     height: 50,
     width: 50,
-    remarkColumn: null,
+    remarkColumn: '',
   };
 
-  console.log(conditions, ' ============--------------');
   if (conditions) {
     for (const condition of conditions) {
       if (condition.column === cellKey && condition.conditions) {

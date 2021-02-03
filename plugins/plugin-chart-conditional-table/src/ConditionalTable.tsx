@@ -315,7 +315,8 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
       width={width}
     >
       <h3>{props.headerText}</h3>
-      <DataTableWrapper
+      <DataTableWrapper<D>
+        // @ts-ignore
         conditions={conditions}
         columns={columns}
         data={data}
@@ -335,10 +336,14 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
   );
 }
 
-class DataTableWrapper extends React.Component {
+class DataTableWrapper<D extends DataRecord = DataRecord> extends React.Component {
   timeout = null;
 
-  constructor(props) {
+  constructor(
+    props: TableChartTransformedProps<D> & {
+      sticky?: DataTableProps<D>['sticky'];
+    },
+  ) {
     super(props);
     this.state = {
       showTable: true,
@@ -348,8 +353,10 @@ class DataTableWrapper extends React.Component {
   componentWillReceiveProps(nextProps: any, nextContext: any): void {
     this.setState({ showTable: false });
     if (this.timeout) {
+      // @ts-ignore
       clearTimeout(this.timeout);
     }
+    // @ts-ignore
     this.timeout = setTimeout(() => {
       this.setState({ showTable: true });
       this.timeout = null;
@@ -357,8 +364,9 @@ class DataTableWrapper extends React.Component {
   }
 
   render() {
+    // @ts-ignore
     const { showTable } = this.state;
     // @ts-ignore
-    return <DataTable showMainHeader={showTable} {...this.props} />;
+    return <DataTable<D> showMainHeader={showTable} {...this.props} />;
   }
 }
