@@ -403,7 +403,9 @@ export default function DataTable<D extends object>({
     document.getElementsByClassName('table-dynamic-wrapper')[0].firstElementChild
   ) {
     setTimeout(() => {
+      // @ts-ignore
       document.getElementsByClassName('table-dynamic-wrapper')[0].firstElementChild.style.height =
+        // @ts-ignore
         document.getElementsByClassName('table-dynamic-wrapper')[0].firstElementChild.offsetHeight +
         70 +
         'px';
