@@ -17,7 +17,12 @@
  * under the License.
  */
 import { t, validateNonEmpty } from '@superset-ui/core';
-import { formatSelectOptions, ControlPanelConfig } from '@superset-ui/chart-controls';
+import {
+  formatSelectOptions,
+  ControlPanelsContainerProps,
+  ControlPanelConfig,
+  ControlStateMapping,
+} from '@superset-ui/chart-controls';
 
 export const PAGE_SIZE_OPTIONS = formatSelectOptions<number>([
   [0, t('page_size.all')],
@@ -27,6 +32,33 @@ export const PAGE_SIZE_OPTIONS = formatSelectOptions<number>([
   100,
   200,
 ]);
+
+export enum QueryMode {
+  aggregate = 'aggregate',
+  raw = 'raw',
+}
+
+function getQueryMode(controls: ControlStateMapping): QueryMode {
+  const mode = controls?.query_mode?.value;
+  if (mode === QueryMode.aggregate || mode === QueryMode.raw) {
+    return mode as QueryMode;
+  }
+  const rawColumns = controls?.all_columns?.value;
+  const hasRawColumns = rawColumns && (rawColumns as string[])?.length > 0;
+  return hasRawColumns ? QueryMode.raw : QueryMode.aggregate;
+}
+
+/**
+ * Visibility check
+ */
+function isQueryMode(mode: QueryMode) {
+  return ({ controls }: ControlPanelsContainerProps) => {
+    return getQueryMode(controls) === mode;
+  };
+}
+
+const isAggMode = isQueryMode(QueryMode.aggregate);
+const isRawMode = isQueryMode(QueryMode.raw);
 
 const config: ControlPanelConfig = {
   /**
@@ -113,7 +145,44 @@ const config: ControlPanelConfig = {
         ['groupby'],
         ['metrics'],
         ['adhoc_filters'],
+        [
+          {
+            name: 'order_by_cols',
+            config: {
+              type: 'SelectControl',
+              label: t('Ordering'),
+              description: t('One or many metrics to display'),
+              multi: true,
+              default: [],
+              mapStateToProps: ({ datasource }) => ({
+                choices: datasource?.order_by_choices || [],
+              }),
+            },
+          },
+        ],
         ['row_limit', null],
+        [
+          {
+            name: 'include_time',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Include Time'),
+              description: t(
+                'Whether to include the time granularity as defined in the time section',
+              ),
+              default: false,
+            },
+          },
+          {
+            name: 'order_desc',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Sort Descending'),
+              default: true,
+              description: t('Whether to sort descending or ascending'),
+            },
+          },
+        ],
         // [
         //   {
         //     name: 'orderBy',
@@ -254,6 +323,14 @@ const config: ControlPanelConfig = {
     },
     row_limit: {
       default: 100,
+    },
+  },
+  sectionOverrides: {
+    druidTimeSeries: {
+      controlSetRows: [['granularity', 'druid_time_origin'], ['time_range']],
+    },
+    sqlaTimeSeries: {
+      controlSetRows: [['granularity_sqla', 'time_grain_sqla'], ['time_range']],
     },
   },
 };
