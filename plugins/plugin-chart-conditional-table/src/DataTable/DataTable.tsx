@@ -424,6 +424,10 @@ export default function DataTable<D extends object>({
         }
       }
       if (requiredElement) {
+        console.log(requiredElement.style.height);
+      }
+      if (requiredElement && !requiredElement.classList.contains('processdHeight')) {
+        requiredElement.classList.add('processdHeight');
         requiredElement.style.height = requiredElement.offsetHeight + 70 + 'px';
       }
     }, 100);
