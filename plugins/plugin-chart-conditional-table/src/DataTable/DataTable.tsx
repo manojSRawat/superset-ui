@@ -402,13 +402,30 @@ export default function DataTable<D extends object>({
     document.getElementsByClassName('table-dynamic-wrapper')[0] &&
     document.getElementsByClassName('table-dynamic-wrapper')[0].firstElementChild
   ) {
+    const searchForChild = element => {
+      if (element.classList.contains('table') && element.classList.contains('table-striped')) {
+        return element;
+      } else if (element.children != null) {
+        var i;
+        var result = null;
+        for (i = 0; result == null && i < element.children.length; i++) {
+          result = searchForChild(element.children[i]);
+        }
+        return result;
+      }
+      return null;
+    };
     setTimeout(() => {
-      // @ts-ignore
-      // document.getElementsByClassName('table-dynamic-wrapper')[0].firstElementChild.style.height =
-      // @ts-ignore
-      //  document.getElementsByClassName('table-dynamic-wrapper')[0].firstElementChild.offsetHeight +
-      //  70 +
-      //  'px';
+      const parentElement = document.getElementsByClassName('table-dynamic-wrapper')[0];
+      let requiredElement;
+      for (let i = 0; i < parentElement.children.length; i++) {
+        if (searchForChild(parentElement.children[i])) {
+          requiredElement = parentElement.children[i];
+        }
+      }
+      if (requiredElement) {
+        requiredElement.style.height = requiredElement.offsetHeight + 70 + 'px';
+      }
     }, 100);
   }
   return (
