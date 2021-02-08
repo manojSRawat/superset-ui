@@ -2,7 +2,7 @@ import { styled } from '@superset-ui/core';
 import { ConditionalTableStylesProps } from './types';
 export default styled.div<ConditionalTableStylesProps>`
   table {
-    width: 99%;
+    width: 100%;
     min-width: auto;
     max-width: none;
     margin: 0;
