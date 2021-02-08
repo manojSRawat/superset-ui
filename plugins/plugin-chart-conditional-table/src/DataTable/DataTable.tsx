@@ -402,7 +402,7 @@ export default function DataTable<D extends object>({
     document.getElementsByClassName('table-dynamic-wrapper')[0] &&
     document.getElementsByClassName('table-dynamic-wrapper')[0].firstElementChild
   ) {
-    const searchForChild = element => {
+    const searchForChild = (element: any): any => {
       if (element.classList.contains('table') && element.classList.contains('table-striped')) {
         return element;
       } else if (element.children != null) {
@@ -417,14 +417,11 @@ export default function DataTable<D extends object>({
     };
     setTimeout(() => {
       const parentElement = document.getElementsByClassName('table-dynamic-wrapper')[0];
-      let requiredElement;
+      let requiredElement: any;
       for (let i = 0; i < parentElement.children.length; i++) {
         if (searchForChild(parentElement.children[i])) {
           requiredElement = parentElement.children[i];
         }
-      }
-      if (requiredElement) {
-        console.log(requiredElement.style.height);
       }
       if (requiredElement && !requiredElement.classList.contains('processdHeight')) {
         requiredElement.classList.add('processdHeight');
