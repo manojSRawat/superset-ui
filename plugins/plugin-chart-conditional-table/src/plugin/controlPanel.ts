@@ -19,9 +19,9 @@
 import { t, validateNonEmpty } from '@superset-ui/core';
 import {
   formatSelectOptions,
-  ControlPanelsContainerProps,
+  // ControlPanelsContainerProps,
   ControlPanelConfig,
-  ControlStateMapping,
+  // ControlStateMapping,
 } from '@superset-ui/chart-controls';
 
 export const PAGE_SIZE_OPTIONS = formatSelectOptions<number>([
@@ -38,27 +38,27 @@ export enum QueryMode {
   raw = 'raw',
 }
 
-function getQueryMode(controls: ControlStateMapping): QueryMode {
-  const mode = controls?.query_mode?.value;
-  if (mode === QueryMode.aggregate || mode === QueryMode.raw) {
-    return mode as QueryMode;
-  }
-  const rawColumns = controls?.all_columns?.value;
-  const hasRawColumns = rawColumns && (rawColumns as string[])?.length > 0;
-  return hasRawColumns ? QueryMode.raw : QueryMode.aggregate;
-}
+// function getQueryMode(controls: ControlStateMapping): QueryMode {
+//   const mode = controls?.query_mode?.value;
+//   if (mode === QueryMode.aggregate || mode === QueryMode.raw) {
+//     return mode as QueryMode;
+//   }
+//   const rawColumns = controls?.all_columns?.value;
+//   const hasRawColumns = rawColumns && (rawColumns as string[])?.length > 0;
+//   return hasRawColumns ? QueryMode.raw : QueryMode.aggregate;
+// }
 
 /**
  * Visibility check
  */
-function isQueryMode(mode: QueryMode) {
-  return ({ controls }: ControlPanelsContainerProps) => {
-    return getQueryMode(controls) === mode;
-  };
-}
+// function isQueryMode(mode: QueryMode) {
+//   return ({ controls }: ControlPanelsContainerProps) => {
+//     return getQueryMode(controls) === mode;
+//   };
+// }
 
-const isAggMode = isQueryMode(QueryMode.aggregate);
-const isRawMode = isQueryMode(QueryMode.raw);
+// const isAggMode = isQueryMode(QueryMode.aggregate);
+// const isRawMode = isQueryMode(QueryMode.raw);
 
 const config: ControlPanelConfig = {
   /**
