@@ -311,7 +311,7 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
       ref={rootElem}
       boldText={props.boldText}
       headerFontSize={props.headerFontSize}
-      height={height}
+      height={height + 20}
       width={width}
     >
       <h3>{props.headerText}</h3>
