@@ -423,9 +423,9 @@ export default function DataTable<D extends object>({
           requiredElement = parentElement.children[i];
         }
       }
-      console.log('requiredElement', requiredElement);
-
+      const groupHeaderEle = document.getElementById('groupHeader');
       if (
+        groupHeaderEle &&
         requiredElement &&
         requiredElement.children.length > 1 &&
         !requiredElement.children[1].classList.contains('processdHeight')
@@ -433,7 +433,7 @@ export default function DataTable<D extends object>({
         console.log('in if');
         requiredElement.children[1].classList.add('processdHeight');
         requiredElement.children[1].style.height =
-          requiredElement.children[1].offsetHeight - 70 + 'px';
+          requiredElement.children[1].offsetHeight - groupHeaderEle.offsetHeight + 'px';
       }
     }, 100);
   }
