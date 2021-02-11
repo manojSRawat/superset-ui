@@ -215,8 +215,4 @@ export default styled.div<ConditionalTableStylesProps>`
   .remark {
     font-size: 20px;
   }
-
-  .total-row {
-    margin-bottom: 20px;
-  }
 `;

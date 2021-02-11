@@ -359,7 +359,7 @@ export default function DataTable<D extends object>({
               </tr>
             )}
             {showTotal ? (
-              <tr className="total-row">
+              <tr>
                 {Object.keys(total).map((cellKey: string, index) => {
                   // @ts-ignore
                   const cellData = getCellData(cellKey, total[cellKey], conditions, true);
@@ -396,6 +396,39 @@ export default function DataTable<D extends object>({
     setPageSize(initialPageSize);
   }
 
+  if (
+    typeof window !== 'undefined' &&
+    document.getElementsByClassName('table-dynamic-wrapper') &&
+    document.getElementsByClassName('table-dynamic-wrapper')[0] &&
+    document.getElementsByClassName('table-dynamic-wrapper')[0].firstElementChild
+  ) {
+    const searchForChild = (element: any): any => {
+      if (element.classList.contains('table') && element.classList.contains('table-striped')) {
+        return element;
+      } else if (element.children != null) {
+        var i;
+        var result = null;
+        for (i = 0; result == null && i < element.children.length; i++) {
+          result = searchForChild(element.children[i]);
+        }
+        return result;
+      }
+      return null;
+    };
+    setTimeout(() => {
+      const parentElement = document.getElementsByClassName('table-dynamic-wrapper')[0];
+      let requiredElement: any;
+      for (let i = 0; i < parentElement.children.length; i++) {
+        if (searchForChild(parentElement.children[i])) {
+          requiredElement = parentElement.children[i];
+        }
+      }
+      if (requiredElement && !requiredElement.classList.contains('processdHeight')) {
+        requiredElement.classList.add('processdHeight');
+        requiredElement.style.height = requiredElement.offsetHeight + 70 + 'px';
+      }
+    }, 100);
+  }
   return (
     <div ref={wrapperRef} style={{ width: initialWidth, height: initialHeight }}>
       {hasGlobalControl ? (
