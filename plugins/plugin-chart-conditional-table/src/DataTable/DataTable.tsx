@@ -423,6 +423,8 @@ export default function DataTable<D extends object>({
           requiredElement = parentElement.children[i];
         }
       }
+      console.log('requiredElement', requiredElement);
+
       if (requiredElement && !requiredElement.classList.contains('processdHeight')) {
         requiredElement.classList.add('processdHeight');
         requiredElement.style.height = requiredElement.offsetHeight + 70 + 'px';
