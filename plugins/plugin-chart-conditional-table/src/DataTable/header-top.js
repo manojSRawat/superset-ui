@@ -12,6 +12,7 @@ export default function HeaderTop() {
     });
     return (
       <tr
+        id="groupHeader"
         style={{
           height: childData.length ? 'auto' : '0px',
           overflow: childData.length ? 'auto' : 'hidden',
