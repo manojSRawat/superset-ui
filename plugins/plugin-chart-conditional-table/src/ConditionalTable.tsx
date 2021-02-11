@@ -325,7 +325,7 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
         pageSize={pageSize}
         pageSizeOptions={pageSizeOptions}
         width={width}
-        height={height + 20}
+        height={height}
         maxPageItemCount={width > 340 ? 9 : 7}
         noResults={(filter: string) => t(filter ? 'No matching records found' : 'No records found')}
         searchInput={includeSearch && SearchInput}
