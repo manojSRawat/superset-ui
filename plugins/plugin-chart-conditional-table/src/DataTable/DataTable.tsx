@@ -359,7 +359,7 @@ export default function DataTable<D extends object>({
               </tr>
             )}
             {showTotal ? (
-              <tr>
+              <tr className="total-row">
                 {Object.keys(total).map((cellKey: string, index) => {
                   // @ts-ignore
                   const cellData = getCellData(cellKey, total[cellKey], conditions, true);
