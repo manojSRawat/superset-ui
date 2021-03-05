@@ -43,6 +43,7 @@ import SimplePagination from './components/Pagination';
 import useSticky from './hooks/useSticky';
 import { ConditionProps } from '../types';
 import getCellData from '../utils/condition';
+import parseInfixString from '../utils/formula';
 
 export interface DataTableProps<D extends object> extends TableOptions<D> {
   tableClassName?: string;
@@ -210,10 +211,22 @@ export default function DataTable<D extends object>({
     for (const condition of conditions) {
       if (condition.showTotal) {
         showTotal = true;
-        break;
+      }
+      if (condition.totalFormula) {
+        let formulaKey = condition.totalFormula;
+        for (let key in total) {
+          // eslint-disable-next-line no-prototype-builtins
+          if (total.hasOwnProperty(key)) {
+            // @ts-ignore
+            formulaKey = formulaKey.replaceAll(key, total[key]);
+          }
+        }
+        // @ts-ignore
+        total[condition.column] = parseInfixString(formulaKey);
       }
     }
   }
+
   let i: Array<string> = [];
   const [images, setImages] = React.useState(i);
   const [remarks, setRemarks] = React.useState(i);
