@@ -107,6 +107,7 @@ export interface ConditionProps {
   alignment: string;
   format: string;
   showTotal: boolean;
+  totalFormula: string;
   disableFilters: boolean;
   disableSortBy: boolean;
   thumbnailHeight: number;
