@@ -222,7 +222,7 @@ export default function DataTable<D extends object>({
           }
         }
         // @ts-ignore
-        total[condition.column] = parseInfixString(formulaKey);
+        total[condition.column] = Math.round(parseInfixString(formulaKey));
       }
     }
   }
@@ -443,7 +443,7 @@ export default function DataTable<D extends object>({
         requiredElement.children.length > 1 &&
         !requiredElement.children[1].classList.contains('processdHeight')
       ) {
-        console.log('in if');
+        // console.log('in if');
         requiredElement.children[1].classList.add('processdHeight');
         requiredElement.children[1].style.height =
           requiredElement.children[1].offsetHeight - groupHeaderEle.offsetHeight + 'px';
