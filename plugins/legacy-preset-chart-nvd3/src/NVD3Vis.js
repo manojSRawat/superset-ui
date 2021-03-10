@@ -654,8 +654,6 @@ function nvd3Vis(element, props) {
       }
     }
 
-    console.log('xxx', data);
-
     if (isVizTypes(['dual_line', 'line_multi'])) {
       const yAxisFormatter1 = getNumberFormatter(yAxisFormat);
       const yAxisFormatter2 = getNumberFormatter(yAxis2Format);
