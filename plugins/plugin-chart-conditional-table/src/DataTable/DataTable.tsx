@@ -205,6 +205,7 @@ export default function DataTable<D extends object>({
       }
     }
   });
+  console.log('total', total);
 
   if (conditions) {
     // eslint-disable-next-line no-restricted-syntax
@@ -214,6 +215,7 @@ export default function DataTable<D extends object>({
       }
       if (condition.totalFormula) {
         let formulaKey = condition.totalFormula;
+        console.log('Formula for => ', condition.column, ' is =>', formulaKey);
         for (let key in total) {
           // eslint-disable-next-line no-prototype-builtins
           if (total.hasOwnProperty(key)) {
@@ -221,8 +223,11 @@ export default function DataTable<D extends object>({
             formulaKey = formulaKey.replaceAll(key, total[key]);
           }
         }
+        console.log('parsed formula =>', formulaKey);
         // @ts-ignore
         total[condition.column] = Math.round(parseInfixString(formulaKey));
+        // @ts-ignore
+        console.log('val', total[condition.column]);
       }
     }
   }
