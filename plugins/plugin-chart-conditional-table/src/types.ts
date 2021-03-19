@@ -35,6 +35,7 @@ export enum DataType {
   Number = 'number',
   String = 'string',
   DateTime = 'datetime',
+  MomentDateTime = 'momentdatetime',
 }
 
 export interface TableChartFormData {
@@ -109,6 +110,7 @@ export interface ConditionProps {
   showTotal: boolean;
   totalFormula: string;
   disableFilters: boolean;
+  dateFormat: string;
   disableSortBy: boolean;
   thumbnailHeight: number;
   thumbnailWidth: number;
