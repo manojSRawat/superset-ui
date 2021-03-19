@@ -1,40 +1,77 @@
 import { ConditionProps } from '../types';
+import moment from 'moment';
 
-function isConditionSatisfied(originalValue: any, comparativeValue: any, symbol: String) {
-  if (!isNaN(originalValue) && !isNaN(comparativeValue)) {
-    const oValue = parseFloat(originalValue);
-    const cValue = parseFloat(comparativeValue);
+function isConditionSatisfied(
+  originalValue: any,
+  comparativeValue: any,
+  symbol: String,
+  dataType: string,
+) {
+  let isComparisonSatisfied = false;
+  switch (dataType) {
+    case 'NUMBER':
+      const oValue = parseFloat(originalValue);
+      const cValue = parseFloat(comparativeValue);
 
-    switch (symbol) {
-      case 'GREATER':
-      case '>':
-        return oValue > cValue;
-      case 'GREATER_EQUAL':
-      case '>=':
-        return oValue >= cValue;
-      case 'LESS':
-      case '<':
-        return oValue < cValue;
-      case 'LESS_EQUAL':
-      case '<=':
-        return oValue <= cValue;
-      case 'EQUAL':
-      case '=':
-        return oValue === cValue;
-      default:
-        return false;
-    }
-  } else if (typeof originalValue === 'string' && typeof comparativeValue === 'string') {
-    switch (symbol) {
-      case 'EQUAL':
-      case '=':
-        return originalValue === comparativeValue;
-      default:
-        return false;
-    }
-  } else {
-    return false;
+      switch (symbol) {
+        case 'GREATER':
+        case '>':
+          isComparisonSatisfied = oValue > cValue;
+          break;
+        case 'GREATER_EQUAL':
+        case '>=':
+          isComparisonSatisfied = oValue >= cValue;
+          break;
+        case 'LESS':
+        case '<':
+          isComparisonSatisfied = oValue < cValue;
+          break;
+        case 'LESS_EQUAL':
+        case '<=':
+          isComparisonSatisfied = oValue <= cValue;
+          break;
+        case 'EQUAL':
+        case '=':
+          isComparisonSatisfied = oValue === cValue;
+          break;
+      }
+      break;
+    case 'STRING':
+      switch (symbol) {
+        case 'EQUAL':
+        case '=':
+          isComparisonSatisfied = originalValue === comparativeValue;
+      }
+      break;
+    case 'DATE':
+      originalValue = originalValue / 1000;
+      comparativeValue = moment(comparativeValue);
+
+      switch (symbol) {
+        case 'GREATER':
+        case '>':
+          isComparisonSatisfied = moment.unix(originalValue).isAfter(comparativeValue);
+          break;
+        case 'GREATER_EQUAL':
+        case '>=':
+          isComparisonSatisfied = moment(originalValue).isSameOrAfter(comparativeValue);
+          break;
+        case 'LESS':
+        case '<':
+          isComparisonSatisfied = moment(originalValue).isBefore(comparativeValue);
+          break;
+        case 'LESS_EQUAL':
+        case '<=':
+          isComparisonSatisfied = moment(originalValue).isSameOrBefore(comparativeValue);
+          break;
+        case 'EQUAL':
+        case '=':
+          isComparisonSatisfied = moment(originalValue).isSame(comparativeValue);
+          break;
+      }
   }
+
+  return isComparisonSatisfied;
 }
 
 export default function getCellData(
@@ -53,6 +90,7 @@ export default function getCellData(
     width: 50,
     remarkColumn: '',
   };
+  let dataType = 'STRING';
 
   if (conditions) {
     for (const condition of conditions) {
@@ -73,6 +111,7 @@ export default function getCellData(
         if (condition.format) {
           switch (condition.format) {
             case 'IN':
+              dataType = 'NUMBER';
               if (parsedValue) {
                 parsedValue = parsedValue.toString();
                 let afterDecimal = '';
@@ -93,16 +132,29 @@ export default function getCellData(
             case 'IMAGE':
               isImage = true;
               break;
+            case 'DATE':
+              dataType = 'DATE';
+              parsedValue = isNaN(cellValue)
+                ? ''
+                : moment.unix(parseInt(cellValue) / 1000).format(condition.dateFormat);
+              break;
           }
         }
 
         for (let i = 0; i < condition.conditions.length; i++) {
+          if (
+            !isNaN(condition.conditions[i].initialValue) &&
+            !isNaN(condition.conditions[i].initialValue)
+          ) {
+            dataType = 'NUMBER';
+          }
           if (
             condition.conditions[i].initialValue &&
             isConditionSatisfied(
               cellValue,
               condition.conditions[i].initialValue,
               condition.conditions[i].initialSymbol,
+              dataType,
             )
           ) {
             if (
@@ -112,6 +164,7 @@ export default function getCellData(
                   cellValue,
                   condition.conditions[i].finalValue,
                   condition.conditions[i].finalSymbol,
+                  dataType,
                 ))
             ) {
               colorProperty = `rgba(${condition.conditions[i].color.r},${condition.conditions[i].color.g},${condition.conditions[i].color.b},${condition.conditions[i].color.a})`;

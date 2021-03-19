@@ -30,7 +30,13 @@ import {
 
 import isEqualArray from '../utils/isEqualArray';
 import DateWithFormatter from '../utils/DateWithFormatter';
-import { TableChartProp, TableChartProps, DataType, DataColumnMeta } from '../types';
+import {
+  TableChartProp,
+  TableChartProps,
+  DataType,
+  DataColumnMeta,
+  ConditionProps,
+} from '../types';
 
 const { PERCENT_3_POINT } = NumberFormats;
 const TIME_COLUMN = '__timestamp';
@@ -60,6 +66,25 @@ function isTimeType(key: string, data: DataRecord[] = []) {
       return value instanceof Date || (typeof value === 'string' && REGEXP_DATETIME.test(value));
     })
   );
+}
+
+function checkExplictDateType(
+  key: string,
+  data: DataRecord[] = [],
+  conditions: Array<ConditionProps>,
+) {
+  let isDate: boolean = false;
+  let format: string | undefined = undefined;
+  for (let condition of conditions) {
+    if (condition.column === key) {
+      if (condition.dateFormat) {
+        format = condition.dateFormat;
+        isDate = true;
+      }
+      break;
+    }
+  }
+  return { isDate: isDate, format: format };
 }
 
 function isNumeric(key: string, data: DataRecord[] = []) {
@@ -106,6 +131,7 @@ const processColumns = memoizeOne(function processColumns(props: TableChartProps
   const {
     datasource: { columnFormats, verboseMap },
     formData: {
+      conditions,
       tableTimestampFormat,
       timeGrainSqla: granularity,
       metrics: metrics_,
@@ -130,13 +156,18 @@ const processColumns = memoizeOne(function processColumns(props: TableChartProps
     }
     // fallback to column level formats defined in datasource
     const format = columnFormats?.[key];
+
     const isTime = isTimeType(key, records);
+    const checkExplictDate = checkExplictDateType(key, records, conditions);
+
     // for the purpose of presentation, only numeric values are treated as metrics
     const isMetric = metricsSet.has(key) && isNumeric(key, records);
     const isPercentMetric = percentMetricsSet.has(key);
     let dataType = DataType.Number; // TODO: get this from data source
     let formatter;
-    if (isTime) {
+    if (checkExplictDate.isDate && checkExplictDate.format) {
+      dataType = DataType.MomentDateTime;
+    } else if (isTime) {
       // Use granularity for "Adaptive Formatting" (smart_date)
       const timeFormat = format || tableTimestampFormat;
       formatter = getTimeFormatter(timeFormat);
@@ -225,6 +256,7 @@ export default function transformProps(chartProps: TableChartProp) {
   };
 
   const [metrics, percentMetrics, columns] = processColumns(tableChartProps);
+
   const data = processDataRecords(tableChartProps.queryData?.data?.records, columns);
 
   return {
