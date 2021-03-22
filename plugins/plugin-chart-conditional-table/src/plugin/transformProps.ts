@@ -158,7 +158,7 @@ const processColumns = memoizeOne(function processColumns(props: TableChartProps
     const format = columnFormats?.[key];
 
     const isTime = isTimeType(key, records);
-    const checkExplictDate = checkExplictDateType(key, records, conditions);
+    const checkExplictDate = checkExplictDateType(key, records, conditions || []);
 
     // for the purpose of presentation, only numeric values are treated as metrics
     const isMetric = metricsSet.has(key) && isNumeric(key, records);
