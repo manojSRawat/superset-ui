@@ -6,6 +6,7 @@ function isConditionSatisfied(
   comparativeValue: any,
   symbol: String,
   dataType: string,
+  dateFormat: string,
 ) {
   let isComparisonSatisfied = false;
   switch (dataType) {
@@ -44,29 +45,31 @@ function isConditionSatisfied(
       }
       break;
     case 'DATE':
-      originalValue = originalValue / 1000;
-      comparativeValue = moment(comparativeValue);
+      originalValue = moment.unix(originalValue / 1000).format(dateFormat);
+      comparativeValue = moment(comparativeValue, dateFormat);
 
       switch (symbol) {
         case 'GREATER':
         case '>':
-          isComparisonSatisfied = moment.unix(originalValue).isAfter(comparativeValue);
+          isComparisonSatisfied = moment(originalValue, dateFormat).isAfter(comparativeValue);
           break;
         case 'GREATER_EQUAL':
         case '>=':
-          isComparisonSatisfied = moment(originalValue).isSameOrAfter(comparativeValue);
+          isComparisonSatisfied = moment(originalValue, dateFormat).isSameOrAfter(comparativeValue);
           break;
         case 'LESS':
         case '<':
-          isComparisonSatisfied = moment(originalValue).isBefore(comparativeValue);
+          isComparisonSatisfied = moment(originalValue, dateFormat).isBefore(comparativeValue);
           break;
         case 'LESS_EQUAL':
         case '<=':
-          isComparisonSatisfied = moment(originalValue).isSameOrBefore(comparativeValue);
+          isComparisonSatisfied = moment(originalValue, dateFormat).isSameOrBefore(
+            comparativeValue,
+          );
           break;
         case 'EQUAL':
         case '=':
-          isComparisonSatisfied = moment(originalValue).isSame(comparativeValue);
+          isComparisonSatisfied = moment(originalValue, dateFormat).isSame(comparativeValue);
           break;
       }
   }
@@ -155,6 +158,7 @@ export default function getCellData(
               condition.conditions[i].initialValue,
               condition.conditions[i].initialSymbol,
               dataType,
+              condition.dateFormat,
             )
           ) {
             if (
@@ -165,6 +169,7 @@ export default function getCellData(
                   condition.conditions[i].finalValue,
                   condition.conditions[i].finalSymbol,
                   dataType,
+                  condition.dateFormat,
                 ))
             ) {
               colorProperty = `rgba(${condition.conditions[i].color.r},${condition.conditions[i].color.g},${condition.conditions[i].color.b},${condition.conditions[i].color.a})`;
