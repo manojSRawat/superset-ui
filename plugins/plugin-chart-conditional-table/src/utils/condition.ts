@@ -45,31 +45,36 @@ function isConditionSatisfied(
       }
       break;
     case 'DATE':
-      originalValue = moment.unix(originalValue / 1000).format(dateFormat);
-      comparativeValue = moment(comparativeValue, dateFormat);
+      if (comparativeValue === 'now') {
+        comparativeValue = moment();
+      } else if (Number(comparativeValue)) {
+        comparativeValue = moment(comparativeValue, dateFormat);
+      }
+
+      if (Number(originalValue)) {
+        originalValue = moment.unix(originalValue / 1000);
+      }
 
       switch (symbol) {
         case 'GREATER':
         case '>':
-          isComparisonSatisfied = moment(originalValue, dateFormat).isAfter(comparativeValue);
+          isComparisonSatisfied = moment(originalValue).isAfter(comparativeValue);
           break;
         case 'GREATER_EQUAL':
         case '>=':
-          isComparisonSatisfied = moment(originalValue, dateFormat).isSameOrAfter(comparativeValue);
+          isComparisonSatisfied = moment(originalValue).isSameOrAfter(comparativeValue);
           break;
         case 'LESS':
         case '<':
-          isComparisonSatisfied = moment(originalValue, dateFormat).isBefore(comparativeValue);
+          isComparisonSatisfied = moment(originalValue).isBefore(comparativeValue);
           break;
         case 'LESS_EQUAL':
         case '<=':
-          isComparisonSatisfied = moment(originalValue, dateFormat).isSameOrBefore(
-            comparativeValue,
-          );
+          isComparisonSatisfied = moment(originalValue).isSameOrBefore(comparativeValue);
           break;
         case 'EQUAL':
         case '=':
-          isComparisonSatisfied = moment(originalValue, dateFormat).isSame(comparativeValue);
+          isComparisonSatisfied = moment(originalValue).isSame(comparativeValue);
           break;
       }
   }
@@ -137,9 +142,14 @@ export default function getCellData(
               break;
             case 'DATE':
               dataType = 'DATE';
-              parsedValue = isNaN(cellValue)
-                ? ''
-                : moment.unix(parseInt(cellValue) / 1000).format(condition.dateFormat);
+              if (isNaN(cellValue)) {
+                parsedValue = '';
+              }
+              if (Number(cellValue)) {
+                parsedValue = moment.unix(parseInt(cellValue) / 1000).format(condition.dateFormat);
+              } else {
+                parsedValue = moment(cellValue).format(condition.dateFormat);
+              }
               break;
           }
         }

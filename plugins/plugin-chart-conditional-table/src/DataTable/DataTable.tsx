@@ -338,11 +338,22 @@ export default function DataTable<D extends object>({
                   // @ts-ignore
                   <tr key={rowKey || row.id} {...rowProps}>
                     {row.cells.map((cell: any, index: number) => {
-                      const cellData = getCellData(
-                        Object.keys(cell.row.original)[cell.column.id],
-                        cell.value,
-                        conditions,
-                      );
+                      // console.log('--->>>', cell, typeof cell.value);
+                      let cellData = null;
+                      if (cell.value && typeof cell.value === 'object') {
+                        cellData = getCellData(
+                          Object.keys(cell.row.original)[cell.column.id],
+                          cell.value.input,
+                          conditions,
+                        );
+                      } else {
+                        cellData = getCellData(
+                          Object.keys(cell.row.original)[cell.column.id],
+                          cell.value,
+                          conditions,
+                        );
+                      }
+                      // console.log('---', cellData);
                       return (
                         <td
                           key={index.toString()}
