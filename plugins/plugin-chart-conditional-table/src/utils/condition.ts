@@ -47,6 +47,11 @@ function isConditionSatisfied(
     case 'DATE':
       if (comparativeValue === 'now') {
         comparativeValue = moment();
+      } else if (
+        comparativeValue.includes('now') &&
+        Number(comparativeValue.substr(3).replaceAll(' ', ''))
+      ) {
+        comparativeValue = moment().add(comparativeValue.substr(3).replaceAll(' ', ''), 'days');
       } else if (Number(comparativeValue)) {
         comparativeValue = moment(comparativeValue, dateFormat);
       }
