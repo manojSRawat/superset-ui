@@ -105,7 +105,9 @@ export default function getCellData(
   };
   let dataType = 'STRING';
 
-  if (conditions) {
+  if (!cellValue) {
+    parsedValue = '-';
+  } else if (conditions) {
     for (const condition of conditions) {
       if (condition.column === cellKey && condition.conditions) {
         if (condition.alignment) {
