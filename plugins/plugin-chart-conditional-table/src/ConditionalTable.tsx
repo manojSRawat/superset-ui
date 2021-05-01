@@ -306,6 +306,60 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
     return columnsMeta.map(getColumnConfigs);
   }, [columnsMeta, getColumnConfigs]);
 
+  let parents: any = [];
+  let headerColumnsMap: any = {};
+  let columnHeaderMap: any = {};
+  let columnInexMap: any = {};
+
+  if (groups && groups.length) {
+    groups.forEach(group => {
+      console.log('group', group);
+      if (group.children) {
+        console.log('in map');
+        group.children.forEach((child: any) => {
+          console.log('in child');
+          columnHeaderMap[child.childKey] = group.column;
+          if (headerColumnsMap.hasOwnProperty(group.column)) {
+            headerColumnsMap[group.column].push(child.childKey);
+          } else {
+            headerColumnsMap[group.column] = [child.childKey];
+          }
+        });
+      }
+    });
+
+    if (Object.keys(headerColumnsMap).length) {
+      columnsMeta.forEach((columnMeta, index) => {
+        if (columnHeaderMap.hasOwnProperty(columnMeta.key)) {
+          if (columnInexMap.hasOwnProperty(columnHeaderMap[columnMeta.key])) {
+            parents[columnInexMap[columnHeaderMap[columnMeta.key]]].columns.push(columns[index]);
+          } else {
+            columnInexMap[columnHeaderMap[columnMeta.key]] = parents.length;
+            parents.push({
+              id: String(index) + columnMeta.key,
+              Header: () => {
+                return (
+                  <th colSpan={headerColumnsMap[columnHeaderMap[columnMeta.key]].length}>
+                    {columnHeaderMap[columnMeta.key]}
+                  </th>
+                );
+              },
+              columns: [columns[index]],
+            });
+          }
+        } else {
+          parents.push({
+            id: String(index) + columnMeta.key,
+            Header: () => {
+              return <th>{columnMeta.key}</th>;
+            },
+            columns: [columns[index]],
+          });
+        }
+      });
+    }
+  }
+
   return (
     <Styles
       ref={rootElem}
@@ -318,7 +372,7 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
       <DataTableWrapper<D>
         // @ts-ignore
         conditions={conditions}
-        columns={columns}
+        columns={parents.length ? parents : columns}
         data={data}
         groups={groups || []}
         tableClassName="table table-striped table-condensed"
