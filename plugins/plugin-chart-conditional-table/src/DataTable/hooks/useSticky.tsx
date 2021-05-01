@@ -156,7 +156,12 @@ function StickyWrap({
         return;
       }
       const fullTableHeight = (bodyThead.parentNode as HTMLTableElement).clientHeight;
-      const ths = bodyThead.childNodes[0].childNodes as NodeListOf<HTMLTableHeaderCellElement>;
+      let ths = bodyThead.childNodes[0].childNodes as NodeListOf<HTMLTableHeaderCellElement>;
+      if (bodyThead.childNodes.length > 1) {
+        ths = bodyThead.childNodes[bodyThead.childNodes.length - 1].childNodes as NodeListOf<
+          HTMLTableHeaderCellElement
+        >;
+      }
       const widths = Array.from(ths).map(th => th.clientWidth);
       const [hasVerticalScroll, hasHorizontalScroll] = needScrollBar({
         width: maxWidth,
