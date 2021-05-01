@@ -16,15 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React, {
-  useCallback,
-  useRef,
-  ReactNode,
-  HTMLProps,
-  MutableRefObject,
-  Suspense,
-  lazy,
-} from 'react';
+import React, { useCallback, useRef, ReactNode, HTMLProps, MutableRefObject } from 'react';
 import {
   useTable,
   usePagination,
@@ -62,17 +54,6 @@ export interface DataTableProps<D extends object> extends TableOptions<D> {
   groups: Array<any>;
   showMainHeader: Boolean;
 }
-
-let HH: any = null;
-const HeaderTop = ({ parsedGroups }: { parsedGroups: any }) => {
-  window.localStorage.setItem('parsedGroups', JSON.stringify(parsedGroups));
-  // const [debounce, setDebounce] = React.useState(null);
-  return (
-    <Suspense fallback={<div>...</div>}>
-      <HH parsedGroups={parsedGroups} />
-    </Suspense>
-  );
-};
 
 export interface RenderHTMLCellProps extends HTMLProps<HTMLTableCellElement> {
   cellContent: ReactNode;
@@ -299,19 +280,10 @@ export default function DataTable<D extends object>({
         }
       });
     }
-    HH = null;
-    HH = lazy(() => {
-      return new Promise(resolve => {
-        // @ts-ignore
-        setTimeout(() => resolve(import('./header-top.js')), 300);
-      });
-    });
-    let x = HeaderTop({ parsedGroups });
     return (
       // @ts-ignore
       <table {...getTableProps({ className: tableClassName })}>
         <thead className={'header-conditional-table'}>
-          {x}
           {headerGroups.map(headerGroup => {
             const { key: headerGroupKey, ...headerGroupProps } = headerGroup.getHeaderGroupProps();
             return (
@@ -420,47 +392,6 @@ export default function DataTable<D extends object>({
     setPageSize(initialPageSize);
   }
 
-  if (
-    typeof window !== 'undefined' &&
-    document.getElementsByClassName('table-dynamic-wrapper') &&
-    document.getElementsByClassName('table-dynamic-wrapper')[0] &&
-    document.getElementsByClassName('table-dynamic-wrapper')[0].firstElementChild
-  ) {
-    const searchForChild = (element: any): any => {
-      if (element.classList.contains('table') && element.classList.contains('table-striped')) {
-        return element;
-      } else if (element.children != null) {
-        var i;
-        var result = null;
-        for (i = 0; result == null && i < element.children.length; i++) {
-          result = searchForChild(element.children[i]);
-        }
-        return result;
-      }
-      return null;
-    };
-    setTimeout(() => {
-      const parentElement = document.getElementsByClassName('table-dynamic-wrapper')[0];
-      let requiredElement: any;
-      for (let i = 0; i < parentElement.children.length; i++) {
-        if (searchForChild(parentElement.children[i])) {
-          requiredElement = parentElement.children[i];
-        }
-      }
-      const groupHeaderEle = document.getElementById('groupHeader');
-      if (
-        groupHeaderEle &&
-        requiredElement &&
-        requiredElement.children.length > 1 &&
-        !requiredElement.children[1].classList.contains('processdHeight')
-      ) {
-        // console.log('in if');
-        requiredElement.children[1].classList.add('processdHeight');
-        requiredElement.children[1].style.height =
-          requiredElement.children[1].offsetHeight - groupHeaderEle.offsetHeight + 'px';
-      }
-    }, 100);
-  }
   return (
     <div
       className={'table-dynamic-wrapper'}
