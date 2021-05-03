@@ -313,16 +313,15 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
 
   if (groups && groups.length) {
     groups.forEach(group => {
-      console.log('group', group);
       if (group.children) {
-        console.log('in map');
         group.children.forEach((child: any) => {
-          console.log('in child');
-          columnHeaderMap[child.childKey] = group.column;
-          if (headerColumnsMap.hasOwnProperty(group.column)) {
-            headerColumnsMap[group.column].push(child.childKey);
-          } else {
-            headerColumnsMap[group.column] = [child.childKey];
+          if (child.childKey) {
+            columnHeaderMap[child.childKey] = group.column;
+            if (headerColumnsMap.hasOwnProperty(group.column)) {
+              headerColumnsMap[group.column].push(child.childKey);
+            } else {
+              headerColumnsMap[group.column] = [child.childKey];
+            }
           }
         });
       }
