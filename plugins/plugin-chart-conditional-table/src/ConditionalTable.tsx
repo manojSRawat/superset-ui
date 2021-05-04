@@ -307,15 +307,19 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
   }, [columnsMeta, getColumnConfigs]);
 
   let parents: any = [];
+  let columnKeys: any = [];
   let headerColumnsMap: any = {};
   let columnHeaderMap: any = {};
   let columnInexMap: any = {};
 
   if (groups && groups.length) {
+    columnsMeta.forEach(column => {
+      columnKeys.push(column.key);
+    });
     groups.forEach(group => {
       if (group.children) {
         group.children.forEach((child: any) => {
-          if (child.childKey) {
+          if (child.childKey && columnKeys.indexOf(child.childKey) !== -1) {
             columnHeaderMap[child.childKey] = group.column;
             if (headerColumnsMap.hasOwnProperty(group.column)) {
               headerColumnsMap[group.column].push(child.childKey);
@@ -358,6 +362,11 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
       });
     }
   }
+
+  // console.log('--->', columnsMeta);
+  // console.log('--->', headerColumnsMap);
+  // console.log('--->', columnHeaderMap);
+  // console.log('--->', columnInexMap);
 
   return (
     <Styles
