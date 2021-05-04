@@ -93,6 +93,7 @@ export interface ConditionalTableStylesProps {
   width: number;
   headerFontSize: keyof typeof supersetTheme.typography.sizes;
   boldText: boolean;
+  hasMultipleHeader: boolean;
 }
 
 export interface TableProps {

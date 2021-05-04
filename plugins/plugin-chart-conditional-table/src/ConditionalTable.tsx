@@ -375,6 +375,7 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
       headerFontSize={props.headerFontSize}
       height={height}
       width={width}
+      hasMultipleHeader={parents.length}
     >
       <h3>{props.headerText}</h3>
       <DataTableWrapper<D>

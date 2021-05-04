@@ -7,7 +7,9 @@ export default styled.div<ConditionalTableStylesProps>`
     max-width: none;
     margin: 0;
   }
-  .header-conditional-table {
+
+  .header-conditional-table > tr:nth-child(1) > th {
+    text-align: ${({ hasMultipleHeader }) => (hasMultipleHeader ? 'center' : '')};
   }
 
   .header-conditional-table > tr > th {
