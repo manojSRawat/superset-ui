@@ -147,7 +147,7 @@ const config: ControlPanelConfig = {
         ['adhoc_filters'],
         [
           {
-            name: 'order_by_cols',
+            name: 'orderBy',
             config: {
               type: 'SelectControl',
               label: t('Ordering'),
