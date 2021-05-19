@@ -33,14 +33,17 @@ import { buildQueryContext, QueryFormData } from '@superset-ui/core';
  * if a viz needs multiple different result sets.
  */
 export default function buildQuery(formData: QueryFormData) {
-  // formData.orderBy.forEach((orderBy: string, index: number) => {
-  //   formData.orderBy[index] = JSON.parse(orderBy);
-  // });
-  // console.log('formData ==================', formData);
+  const orders: Array<any> = [];
+  formData.orderBy.forEach((orderBy: string, index: number) => {
+    orders.push(JSON.parse(orderBy));
+  });
 
-  return buildQueryContext(formData, baseQueryObject => [
-    {
-      ...baseQueryObject,
-    },
-  ]);
+  return buildQueryContext(formData, baseQueryObject => {
+    baseQueryObject.orderby = orders;
+    return [
+      {
+        ...baseQueryObject,
+      },
+    ];
+  });
 }
