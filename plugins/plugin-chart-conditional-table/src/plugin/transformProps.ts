@@ -242,7 +242,7 @@ export default function transformProps(chartProps: TableChartProp) {
     colorPn: colorPositiveNegative = true,
     showCellBars = true,
     includeSearch = false,
-    includeExcel = false,
+    includeExcel = true,
     pageLength: pageSize = 0,
     tableFilter,
     headerGrouping,
