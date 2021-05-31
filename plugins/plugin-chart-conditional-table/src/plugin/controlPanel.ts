@@ -266,7 +266,7 @@ const config: ControlPanelConfig = {
               type: 'CheckboxControl',
               label: t('Download Excel'),
               renderTrigger: true,
-              default: false,
+              default: true,
               description: t('Whether to include a download excel button'),
             },
           },
