@@ -135,6 +135,24 @@ function SelectPageSize({ options, current, onChange }: SelectPageSizeRendererPr
   );
 }
 
+function generateExcel(data: any) {
+  const requestOptions = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  };
+  fetch('https://adapt.agriodisha.nic.in/api/api/superset-excel', requestOptions)
+    .then(response => response.json())
+    .then(data => {
+      if (data && data.data && data.data.data && data.data.data.url) {
+        const newWin = window.open(data.data.data.url, '_blank');
+        if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+          alert('Please Allow Pop Up');
+        }
+      }
+    });
+}
+
 export default function ConditionalTable<D extends DataRecord = DataRecord>(
   props: TableChartTransformedProps<D> & {
     sticky?: DataTableProps<D>['sticky'];
@@ -307,43 +325,53 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
   }, [columnsMeta, getColumnConfigs]);
 
   let parents: any = [];
+  let columnGroups: any = [];
   let columnKeys: any = [];
-  let headerColumnsMap: any = {};
-  let columnHeaderMap: any = {};
-  let columnInexMap: any = {};
+  let groupColumnMap: any = {};
+  let columnGroupMap: any = {};
+  let columnIndexMap: any = {};
 
   if (groups && groups.length) {
+    // getting all the column names
     columnsMeta.forEach(column => {
       columnKeys.push(column.key);
     });
+    //
     groups.forEach(group => {
       if (group.children) {
         group.children.forEach((child: any) => {
           if (child.childKey && columnKeys.indexOf(child.childKey) !== -1) {
-            columnHeaderMap[child.childKey] = group.column;
-            if (headerColumnsMap.hasOwnProperty(group.column)) {
-              headerColumnsMap[group.column].push(child.childKey);
+            columnGroupMap[child.childKey] = group.column;
+            if (groupColumnMap.hasOwnProperty(group.column)) {
+              groupColumnMap[group.column].push(child.childKey);
             } else {
-              headerColumnsMap[group.column] = [child.childKey];
+              groupColumnMap[group.column] = [child.childKey];
             }
           }
         });
       }
     });
 
-    if (Object.keys(headerColumnsMap).length) {
+    if (Object.keys(groupColumnMap).length) {
       columnsMeta.forEach((columnMeta, index) => {
-        if (columnHeaderMap.hasOwnProperty(columnMeta.key)) {
-          if (columnInexMap.hasOwnProperty(columnHeaderMap[columnMeta.key])) {
-            parents[columnInexMap[columnHeaderMap[columnMeta.key]]].columns.push(columns[index]);
+        if (columnGroupMap.hasOwnProperty(columnMeta.key)) {
+          if (columnIndexMap.hasOwnProperty(columnGroupMap[columnMeta.key])) {
+            parents[columnIndexMap[columnGroupMap[columnMeta.key]]].columns.push(columns[index]);
+            columnGroups[columnIndexMap[columnGroupMap[columnMeta.key]]].children.push(
+              columnMeta.key,
+            );
           } else {
-            columnInexMap[columnHeaderMap[columnMeta.key]] = parents.length;
+            columnIndexMap[columnGroupMap[columnMeta.key]] = parents.length;
+            columnGroups.push({
+              name: columnGroupMap[columnMeta.key],
+              children: [columnMeta.key],
+            });
             parents.push({
               id: String(index) + columnMeta.key,
               Header: () => {
                 return (
-                  <th colSpan={headerColumnsMap[columnHeaderMap[columnMeta.key]].length}>
-                    {columnHeaderMap[columnMeta.key]}
+                  <th colSpan={groupColumnMap[columnGroupMap[columnMeta.key]].length}>
+                    {columnGroupMap[columnMeta.key]}
                   </th>
                 );
               },
@@ -351,6 +379,10 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
             });
           }
         } else {
+          columnGroups.push({
+            name: columnMeta.key,
+            children: [columnMeta.key],
+          });
           parents.push({
             id: String(index) + columnMeta.key,
             Header: () => {
@@ -364,9 +396,11 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
   }
 
   // console.log('--->', columnsMeta);
-  // console.log('--->', headerColumnsMap);
-  // console.log('--->', columnHeaderMap);
-  // console.log('--->', columnInexMap);
+  // console.log('--->', groupColumnMap);
+  // console.log('--->', columnGroupMap);
+  // console.log('--->', columnIndexMap);
+  // console.log('---> xx', parents);
+  // console.log('xxxx', columnGroups);
 
   return (
     <Styles
@@ -377,13 +411,28 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
       width={width}
       hasMultipleHeader={parents.length}
     >
-      <h3>{props.headerText}</h3>
+      <div className="row">
+        <div className="col-md-6">
+          <h3>{props.headerText}</h3>
+        </div>
+        {props.includeExcel ? (
+          <div className="col-md-6">
+            <button
+              className="btn float-right"
+              onClick={() =>
+                generateExcel({ columns: columnsMeta, conditions, data, groups: columnGroups })
+              }
+            >
+              <i className="fa fa-file-excel-o" aria-hidden="true" />
+            </button>
+          </div>
+        ) : null}
+      </div>
       <DataTableWrapper<D>
         // @ts-ignore
         conditions={conditions}
-        columns={parents.length ? parents : columns}
+        columns={parents.length > 0 ? parents : columns}
         data={data}
-        groups={groups || []}
         tableClassName="table table-striped table-condensed"
         pageSize={pageSize}
         pageSizeOptions={pageSizeOptions}
