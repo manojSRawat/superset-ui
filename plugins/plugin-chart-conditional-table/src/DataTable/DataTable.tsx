@@ -51,7 +51,6 @@ export interface DataTableProps<D extends object> extends TableOptions<D> {
   sticky?: boolean;
   wrapperRef?: MutableRefObject<HTMLDivElement>;
   conditions: Array<ConditionProps>;
-  groups: Array<any>;
   showMainHeader: Boolean;
 }
 
@@ -62,7 +61,6 @@ export interface RenderHTMLCellProps extends HTMLProps<HTMLTableCellElement> {
 // Be sure to pass our updateMyData and the skipReset option
 export default function DataTable<D extends object>({
   conditions,
-  groups,
   showMainHeader,
   tableClassName,
   columns,
@@ -264,22 +262,6 @@ export default function DataTable<D extends object>({
   };
 
   const renderTable = () => {
-    // @ts-ignore
-    const parsedGroups: any[] = [];
-
-    if (groups) {
-      groups.forEach((group: any) => {
-        if (group.children) {
-          const g = { ...group, span: 0, initialValue: 0, column: group.column };
-          group.children.forEach((child: any) => {
-            if (child.childKey) {
-              g.span++;
-            }
-          });
-          parsedGroups.push(g);
-        }
-      });
-    }
     return (
       // @ts-ignore
       <table {...getTableProps({ className: tableClassName })}>

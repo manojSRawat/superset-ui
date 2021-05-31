@@ -259,6 +259,18 @@ const config: ControlPanelConfig = {
             },
           },
         ],
+        [
+          {
+            name: 'include_excel',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Download Excel'),
+              renderTrigger: true,
+              default: false,
+              description: t('Whether to include a download excel button'),
+            },
+          },
+        ],
       ],
     },
     {
