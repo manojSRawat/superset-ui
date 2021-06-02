@@ -135,24 +135,24 @@ function SelectPageSize({ options, current, onChange }: SelectPageSizeRendererPr
   );
 }
 
-function generateExcel(data: any) {
-  const requestOptions = {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  };
-  // 'https://adapt.agriodisha.nic.in/api'
-  fetch('http://68.183.81.222:8000/api/superset-excel', requestOptions)
-    .then(response => response.json())
-    .then(data => {
-      if (data && data.data && data.data.data && data.data.data.url) {
-        const newWin = window.open(data.data.data.url, '_blank');
-        if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
-          alert('Please Allow Pop Up');
-        }
-      }
-    });
-}
+// function generateExcel(data: any) {
+//   const requestOptions = {
+//     method: 'POST',
+//     headers: { 'Content-Type': 'application/json' },
+//     body: JSON.stringify(data),
+//   };
+//   // 'https://adapt.agriodisha.nic.in/api'
+//   fetch('http://68.183.81.222:8000/api/superset-excel', requestOptions)
+//     .then(response => response.json())
+//     .then(data => {
+//       if (data && data.data && data.data.data && data.data.data.url) {
+//         const newWin = window.open(data.data.data.url, '_blank');
+//         if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+//           alert('Please Allow Pop Up');
+//         }
+//       }
+//     });
+// }
 
 export default function ConditionalTable<D extends DataRecord = DataRecord>(
   props: TableChartTransformedProps<D> & {
@@ -253,6 +253,9 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
             break;
           }
         }
+      }
+      if (i === 0 && props.freezeFirstRow) {
+        className += ` stick-left`;
       }
       const valueRange = showCellBars && getValueRange(key);
       return {
@@ -355,6 +358,10 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
 
     if (Object.keys(groupColumnMap).length) {
       columnsMeta.forEach((columnMeta, index) => {
+        let thClassName = '';
+        if (parents.length === 0 && props.freezeFirstRow) {
+          thClassName = 'stick-left';
+        }
         if (columnGroupMap.hasOwnProperty(columnMeta.key)) {
           if (columnIndexMap.hasOwnProperty(columnGroupMap[columnMeta.key])) {
             parents[columnIndexMap[columnGroupMap[columnMeta.key]]].columns.push(columns[index]);
@@ -371,7 +378,10 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
               id: String(index) + columnMeta.key,
               Header: () => {
                 return (
-                  <th colSpan={groupColumnMap[columnGroupMap[columnMeta.key]].length}>
+                  <th
+                    className={thClassName}
+                    colSpan={groupColumnMap[columnGroupMap[columnMeta.key]].length}
+                  >
                     {columnGroupMap[columnMeta.key]}
                   </th>
                 );
@@ -387,7 +397,7 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
           parents.push({
             id: String(index) + columnMeta.key,
             Header: () => {
-              return <th>{columnMeta.key}</th>;
+              return <th className={thClassName}>{columnMeta.key}</th>;
             },
             columns: [columns[index]],
           });
@@ -416,22 +426,16 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
         <div className="col-md-6">
           <h3>{props.headerText}</h3>
         </div>
-        {props.includeExcel ? (
+        {/* {props.includeExcel ? (
           <div className="col-md-6">
-            <button
-              className="btn float-right"
-              onClick={() =>
-                generateExcel({ columns: columnsMeta, conditions, data, groups: columnGroups })
-              }
-            >
-              <i className="fa fa-file-excel-o" aria-hidden="true" />
-            </button>
+            <i className="fa fa-file-excel-o float-right" aria-hidden="true" onClick={() => generateExcel({ columns: columnsMeta, conditions, data, groups: columnGroups })} />
           </div>
-        ) : null}
+        ) : null} */}
       </div>
       <DataTableWrapper<D>
         // @ts-ignore
         conditions={conditions}
+        freezeFirstRow={props.freezeFirstRow}
         columns={parents.length > 0 ? parents : columns}
         data={data}
         tableClassName="table table-striped table-condensed"

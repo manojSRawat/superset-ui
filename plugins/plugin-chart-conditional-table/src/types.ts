@@ -46,6 +46,7 @@ export interface TableChartFormData {
   colorPn?: boolean;
   includeSearch?: boolean;
   includeExcel?: boolean;
+  freezeFirstRow?: boolean;
   pageLength?: string | number | null; // null means auto-paginate
   metrics?: QueryFormDataMetric[] | null;
   percentMetrics?: QueryFormDataMetric[] | null;
@@ -166,6 +167,7 @@ export interface TableChartTransformedProps<D extends DataRecord = DataRecord> {
   sortDesc?: boolean;
   includeSearch?: boolean;
   includeExcel?: boolean;
+  freezeFirstRow?: boolean;
   alignPositiveNegative?: boolean;
   colorPositiveNegative?: boolean;
   tableTimestampFormat?: string;

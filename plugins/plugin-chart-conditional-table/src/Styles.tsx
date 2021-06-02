@@ -217,4 +217,11 @@ export default styled.div<ConditionalTableStylesProps>`
   .remark {
     font-size: 20px;
   }
+
+  .stick-left {
+    position: sticky !important;
+    left: 0 !important;
+    background: white !important;
+    z-index: 1 !important;
+  }
 `;
