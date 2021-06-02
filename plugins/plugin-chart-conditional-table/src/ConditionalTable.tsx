@@ -141,7 +141,8 @@ function generateExcel(data: any) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   };
-  fetch('https://adapt.agriodisha.nic.in/api/api/superset-excel', requestOptions)
+  // 'https://adapt.agriodisha.nic.in/api'
+  fetch('http://68.183.81.222:8000/api/superset-excel', requestOptions)
     .then(response => response.json())
     .then(data => {
       if (data && data.data && data.data.data && data.data.data.url) {
@@ -437,7 +438,7 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
         pageSize={pageSize}
         pageSizeOptions={pageSizeOptions}
         width={width}
-        height={height}
+        height={height - (props.includeExcel ? 10 : 0)}
         maxPageItemCount={width > 340 ? 9 : 7}
         noResults={(filter: string) => t(filter ? 'No matching records found' : 'No records found')}
         searchInput={includeSearch && SearchInput}
