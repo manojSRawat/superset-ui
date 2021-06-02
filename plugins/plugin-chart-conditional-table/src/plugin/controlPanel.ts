@@ -271,6 +271,18 @@ const config: ControlPanelConfig = {
             },
           },
         ],
+        [
+          {
+            name: 'freeze_first_row',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Freeze First Column'),
+              renderTrigger: true,
+              default: false,
+              description: t('freeze first row'),
+            },
+          },
+        ],
       ],
     },
     {

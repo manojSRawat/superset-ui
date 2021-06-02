@@ -52,6 +52,7 @@ export interface DataTableProps<D extends object> extends TableOptions<D> {
   wrapperRef?: MutableRefObject<HTMLDivElement>;
   conditions: Array<ConditionProps>;
   showMainHeader: Boolean;
+  freezeFirstRow: Boolean;
 }
 
 export interface RenderHTMLCellProps extends HTMLProps<HTMLTableCellElement> {
@@ -61,6 +62,7 @@ export interface RenderHTMLCellProps extends HTMLProps<HTMLTableCellElement> {
 // Be sure to pass our updateMyData and the skipReset option
 export default function DataTable<D extends object>({
   conditions,
+  freezeFirstRow,
   showMainHeader,
   tableClassName,
   columns,
@@ -307,13 +309,17 @@ export default function DataTable<D extends object>({
                           conditions,
                         );
                       }
+                      let className = cellData.class;
+                      if (index === 0 && freezeFirstRow) {
+                        className += ' stick-left';
+                      }
                       // console.log('---', cellData);
                       return (
                         <td
                           key={index.toString()}
                           {...cell.getCellProps()}
                           style={{ ...cellData.style }}
-                          className={cellData.class}
+                          className={className}
                         >
                           {cellData.isImage
                             ? renderImageThumbnail(
