@@ -19,72 +19,35 @@
 import memoizeOne from 'memoize-one';
 import {
   DataRecord,
-  QueryFormDataMetric,
+  // extractTimegrain,
+  GenericDataType,
+  getMetricLabel,
   getNumberFormatter,
-  NumberFormats,
   getTimeFormatter,
+  // getTimeFormatterForGranularity,
+  NumberFormats,
+  // QueryMode,
   smartDateFormatter,
-  getTimeFormatterForGranularity,
+  // TimeFormats,
   TimeFormatter,
 } from '@superset-ui/core';
 
-import isEqualArray from '../utils/isEqualArray';
+import isEqualColumns from '../utils/isEqualColumns';
 import DateWithFormatter from '../utils/DateWithFormatter';
 import {
-  TableChartProp,
+  // TableChartProp,
   TableChartProps,
-  DataType,
+  // DataType,
   DataColumnMeta,
-  ConditionProps,
+  // ConditionProps,
+  TableChartTransformedProps,
 } from '../types';
 
 const { PERCENT_3_POINT } = NumberFormats;
 const TIME_COLUMN = '__timestamp';
 
-/**
- * Consolidate list of metrics to string, identified by its unique identifier
- */
-function getMetricIdentifier(metric: QueryFormDataMetric) {
-  if (typeof metric === 'string') return metric;
-  // even though `metric.optionName` is more unique, it's not used
-  // anywhere else in `queryData` and cannot be used to access `data.records`.
-  // The records are still keyed by `metric.label`.
-  return metric.label || 'NOT_LABELED';
-}
-
 function isTimeColumn(key: string) {
   return key === TIME_COLUMN;
-}
-
-const REGEXP_DATETIME = /^\d{4}-[01]\d-[03]\d/;
-
-function isTimeType(key: string, data: DataRecord[] = []) {
-  return (
-    isTimeColumn(key) ||
-    data.some(x => {
-      const value = x[key];
-      return value instanceof Date || (typeof value === 'string' && REGEXP_DATETIME.test(value));
-    })
-  );
-}
-
-function checkExplictDateType(
-  key: string,
-  data: DataRecord[] = [],
-  conditions: Array<ConditionProps>,
-) {
-  let isDate: boolean = false;
-  let format: string | undefined = undefined;
-  for (let condition of conditions) {
-    if (condition.column === key) {
-      if (condition.dateFormat) {
-        format = condition.dateFormat;
-        isDate = true;
-      }
-      break;
-    }
-  }
-  return { isDate: isDate, format: format };
 }
 
 function isNumeric(key: string, data: DataRecord[] = []) {
@@ -98,7 +61,7 @@ const processDataRecords = memoizeOne(function processDataRecords(
   if (!data || !data[0]) {
     return data || [];
   }
-  const timeColumns = columns.filter(column => column.dataType === DataType.DateTime);
+  const timeColumns = columns.filter(column => column.dataType === GenericDataType.TEMPORAL);
 
   if (timeColumns.length > 0) {
     return data.map(x => {
@@ -114,90 +77,89 @@ const processDataRecords = memoizeOne(function processDataRecords(
   return data;
 });
 
-const isEqualColumns = <T extends TableChartProps[]>(propsA: T, propsB: T) => {
-  const a = propsA[0];
-  const b = propsB[0];
-  return (
-    a.datasource.columnFormats === b.datasource.columnFormats &&
-    a.datasource.verboseMap === b.datasource.verboseMap &&
-    a.formData.tableTimestampFormat === b.formData.tableTimestampFormat &&
-    a.formData.timeGrainSqla === b.formData.timeGrainSqla &&
-    isEqualArray(a.formData.metrics, b.formData.metrics) &&
-    isEqualArray(a.queryData?.data?.columns, b.queryData?.data?.columns)
-  );
-};
-
 const processColumns = memoizeOne(function processColumns(props: TableChartProps) {
   const {
     datasource: { columnFormats, verboseMap },
-    formData: {
-      conditions,
-      tableTimestampFormat,
-      timeGrainSqla: granularity,
+    rawFormData: {
+      table_timestamp_format: tableTimestampFormat,
       metrics: metrics_,
-      percentMetrics: percentMetrics_,
+      percent_metrics: percentMetrics_,
+      column_config: columnConfig = {},
     },
-    queryData: { data: { records, columns: columns_ } = {} } = {},
+    queriesData,
   } = props;
+  // const granularity = extractTimegrain(props.rawFormData);
+  const { data: records, colnames, coltypes } = queriesData[0] || {};
   // convert `metrics` and `percentMetrics` to the key names in `data.records`
-  const metrics = (metrics_ ?? []).map(getMetricIdentifier);
-  const percentMetrics = (percentMetrics_ ?? [])
-    .map(getMetricIdentifier)
-    // column names for percent metrics always starts with a '%' sign.
-    .map((x: string) => `%${x}`);
+  const metrics = (metrics_ ?? []).map(getMetricLabel);
+  const rawPercentMetrics = (percentMetrics_ ?? []).map(getMetricLabel);
+  // column names for percent metrics always starts with a '%' sign.
+  const percentMetrics = rawPercentMetrics.map((x: string) => `%${x}`);
   const metricsSet = new Set(metrics);
   const percentMetricsSet = new Set(percentMetrics);
+  const rawPercentMetricsSet = new Set(rawPercentMetrics);
 
-  const columns: DataColumnMeta[] = (columns_ || []).map((key: string) => {
-    let label = verboseMap?.[key] || key;
-    if (label[0] === '%' && label[1] !== ' ') {
-      // add a " " after "%" for percent metric labels
-      label = `% ${label.slice(1)}`;
-    }
-    // fallback to column level formats defined in datasource
-    const format = columnFormats?.[key];
+  const columns: DataColumnMeta[] = (colnames || [])
+    .filter(
+      key =>
+        // if a metric was only added to percent_metrics, they should not show up in the table.
+        !(rawPercentMetricsSet.has(key) && !metricsSet.has(key)),
+    )
+    .map((key: string, i) => {
+      const label = verboseMap?.[key] || key;
+      const dataType = coltypes[i];
+      const config = columnConfig[key] || {};
+      // for the purpose of presentation, only numeric values are treated as metrics
+      // because users can also add things like `MAX(str_col)` as a metric.
+      const isMetric = metricsSet.has(key) && isNumeric(key, records);
+      const isPercentMetric = percentMetricsSet.has(key);
+      const isTime = dataType === GenericDataType.TEMPORAL;
+      const savedFormat = columnFormats?.[key];
+      const numberFormat = config.d3NumberFormat || savedFormat;
 
-    const isTime = isTimeType(key, records);
-    const checkExplictDate = checkExplictDateType(key, records, conditions || []);
+      let formatter;
 
-    // for the purpose of presentation, only numeric values are treated as metrics
-    const isMetric = metricsSet.has(key) && isNumeric(key, records);
-    const isPercentMetric = percentMetricsSet.has(key);
-    let dataType = DataType.Number; // TODO: get this from data source
-    let formatter;
-    if (checkExplictDate.isDate && checkExplictDate.format) {
-      dataType = DataType.MomentDateTime;
-    } else if (isTime) {
-      // Use granularity for "Adaptive Formatting" (smart_date)
-      const timeFormat = format || tableTimestampFormat;
-      formatter = getTimeFormatter(timeFormat);
-      if (timeFormat === smartDateFormatter.id) {
-        if (isTimeColumn(key)) {
-          formatter = getTimeFormatterForGranularity(granularity);
-        } else if (format) {
-          formatter = getTimeFormatter(format);
-        } else {
-          // return the identity string when datasource level formatter is not set
-          // and table timestamp format is set to Adaptive Formatting
-          formatter = String;
+      if (isTime || config.d3TimeFormat) {
+        // string types may also apply d3-time format
+        // pick adhoc format first, fallback to column level formats defined in
+        // datasource
+        const customFormat = config.d3TimeFormat || savedFormat;
+        const timeFormat = customFormat || tableTimestampFormat;
+        // When format is "Adaptive Formatting" (smart_date)
+        if (timeFormat === smartDateFormatter.id) {
+          if (isTimeColumn(key)) {
+            // time column use formats based on granularity
+            // formatter = getTimeFormatterForGranularity(granularity);
+          } else if (customFormat) {
+            // other columns respect the column-specific format
+            formatter = getTimeFormatter(customFormat);
+          } else if (isNumeric(key, records)) {
+            // if column is numeric values, it is considered a timestamp64
+            // formatter = getTimeFormatter(DATABASE_DATETIME);
+          } else {
+            // if no column-specific format, print cell as is
+            formatter = String;
+          }
+        } else if (timeFormat) {
+          formatter = getTimeFormatter(timeFormat);
         }
+      } else if (isPercentMetric) {
+        // percent metrics have a default format
+        formatter = getNumberFormatter(numberFormat || PERCENT_3_POINT);
+      } else if (isMetric || numberFormat) {
+        formatter = getNumberFormatter(numberFormat);
       }
-      dataType = DataType.DateTime;
-    } else if (isMetric) {
-      formatter = getNumberFormatter(format);
-    } else if (isPercentMetric) {
-      // percent metrics have a default format
-      formatter = getNumberFormatter(format || PERCENT_3_POINT);
-    } else {
-      dataType = DataType.String;
-    }
-    return {
-      key,
-      label,
-      dataType,
-      formatter,
-    };
-  });
+      return {
+        key,
+        label,
+        dataType,
+        isNumeric: dataType === GenericDataType.NUMERIC,
+        isMetric,
+        isPercentMetric,
+        formatter,
+        config,
+      };
+    });
   return [
     metrics,
     percentMetrics,
@@ -214,49 +176,68 @@ const getPageSize = (
   numColumns: number,
 ) => {
   if (typeof pageSize === 'number') {
+    // NaN is also has typeof === 'number'
     return pageSize || 0;
   }
   if (typeof pageSize === 'string') {
     return Number(pageSize) || 0;
   }
   // when pageSize not set, automatically add pagination if too many records
-  return numRecords * numColumns > 10000 ? 200 : 0;
+  return numRecords * numColumns > 5000 ? 200 : 0;
 };
 
-export default function transformProps(chartProps: TableChartProp) {
+const transformProps = (chartProps: TableChartProps): TableChartTransformedProps => {
   const {
     height,
     width,
-    formData,
-    queryData,
+    rawFormData: formData,
+    queriesData = [],
     initialValues: filters = {},
-    hooks: { onAddFilter: onChangeFilter },
+    // @ts-ignore
+    ownState: serverPaginationData = {},
+    hooks: { onAddFilter: onChangeFilter, setDataMask = () => {} },
   } = chartProps;
 
   const {
-    boldText,
-    headerFontSize,
-    headerText,
+    bold_text: boldText,
+    header_text: headerText,
     conditions,
     jsonCondition,
-    alignPn: alignPositiveNegative = true,
-    colorPn: colorPositiveNegative = true,
-    showCellBars = true,
-    includeSearch = false,
-    includeExcel = true,
-    freezeFirstRow = false,
-    pageLength: pageSize = 0,
-    tableFilter,
     headerGrouping,
-    orderDesc: sortDesc = false,
+    include_excel: includeExcel = true,
+    freeze_first_column: freezeFirstColumn = false,
+
+    align_pn: alignPositiveNegative = true,
+    color_pn: colorPositiveNegative = true,
+    show_cell_bars: showCellBars = true,
+    include_search: includeSearch = false,
+    page_length: pageLength,
+    table_filter: tableFilter,
+    server_pagination: serverPagination = false,
+    server_page_length: serverPageLength = 10,
+    order_desc: sortDesc = false,
+    // query_mode: queryMode,
+    // show_totals: showTotals,
   } = formData;
 
-  const tableChartProps: any = { ...JSON.parse(JSON.stringify(chartProps)) };
+  const [metrics, percentMetrics, columns] = processColumns(chartProps);
 
-  tableChartProps.queryData.data = {
-    records: queryData.data,
-    columns: queryData.data.length ? Object.keys(queryData.data[0]) : [],
-  };
+  let baseQuery;
+  let countQuery;
+  // let totalQuery;
+  let rowCount;
+  if (serverPagination) {
+    // [baseQuery, countQuery, totalQuery] = queriesData;
+    [baseQuery, countQuery] = queriesData;
+    rowCount = (countQuery?.data?.[0]?.rowcount as number) ?? 0;
+  } else {
+    // [baseQuery, totalQuery] = queriesData;
+    [baseQuery] = queriesData;
+    rowCount = baseQuery?.rowcount ?? 0;
+  }
+
+  const data = processDataRecords(baseQuery?.data, columns);
+  // const totals = showTotals && queryMode === QueryMode.aggregate ? totalQuery?.data[0] : undefined;
 
   let stringConstants = null;
   if (jsonCondition) {
@@ -265,15 +246,14 @@ export default function transformProps(chartProps: TableChartProp) {
     } catch (error) {}
   }
 
-  const [metrics, percentMetrics, columns] = processColumns(tableChartProps);
-
-  const data = processDataRecords(tableChartProps.queryData?.data?.records, columns);
-
   return {
     height,
     width,
+    serverPagination,
+    serverPaginationData,
+    setDataMask,
+    rowCount,
     boldText,
-    headerFontSize,
     headerText,
     conditions: conditions && conditions.length ? conditions : stringConstants,
     data,
@@ -287,10 +267,14 @@ export default function transformProps(chartProps: TableChartProp) {
     sortDesc,
     includeSearch,
     includeExcel,
-    freezeFirstRow,
-    pageSize: getPageSize(pageSize, data.length, columns.length),
+    freezeFirstColumn,
+    pageSize: serverPagination
+      ? serverPageLength
+      : getPageSize(pageLength, data.length, columns.length),
     filters,
-    emitFilter: tableFilter === true,
+    emitFilter: tableFilter,
     onChangeFilter,
   };
-}
+};
+
+export default transformProps;

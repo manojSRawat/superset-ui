@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React, { createRef, useEffect, useMemo, useCallback, useState } from 'react';
-import { t, tn, DataRecordValue, DataRecord } from '@superset-ui/core';
+import React, { CSSProperties, createRef, useEffect, useMemo, useCallback, useState } from 'react';
+import { t, tn, DataRecordValue, DataRecord, GenericDataType } from '@superset-ui/core';
 import { DefaultSortTypes, ColumnInstance, ColumnWithLooseAccessor } from 'react-table';
 import { FaSort, FaSortUp as FaSortAsc, FaSortDown as FaSortDesc } from 'react-icons/fa';
 import { extent as d3Extent, max as d3Max } from 'd3-array';
-import { TableChartTransformedProps, DataType, DataColumnMeta } from './types';
-import formatValue from './utils/formatValue';
+import { TableChartTransformedProps, DataColumnMeta } from './types';
+import { formatColumnValue } from './utils/formatValue';
 import DataTable, {
   DataTableProps,
   SearchInputProps,
@@ -37,11 +37,11 @@ type ValueRange = [number, number];
 /**
  * Return sortType based on data type
  */
-function getSortTypeByDataType(dataType: DataType): DefaultSortTypes {
-  if (dataType === DataType.DateTime) {
+function getSortTypeByDataType(dataType: GenericDataType): DefaultSortTypes {
+  if (dataType === GenericDataType.TEMPORAL) {
     return 'datetime';
   }
-  if (dataType === DataType.String) {
+  if (dataType === GenericDataType.STRING) {
     return 'alphanumeric';
   }
   return 'basic';
@@ -162,20 +162,26 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
   const {
     height,
     width,
-    groups,
     data,
-    conditions,
+    totals,
+    isRawRecords,
+    // rowCount = 0,
     columns: columnsMeta,
-    alignPositiveNegative = false,
-    colorPositiveNegative = false,
+    alignPositiveNegative: defaultAlignPN = false,
+    colorPositiveNegative: defaultColorPN = false,
     includeSearch = false,
     pageSize = 0,
-    // showCellBars = false,
+    // serverPagination = false,
+    // serverPaginationData,
+    // setDataMask,
+    // showCellBars = true,
     emitFilter = false,
     sortDesc = false,
-    onChangeFilter,
-    filters: initialFilters,
+    filters: initialFilters = {},
     sticky = true, // whether to use sticky header
+    groups,
+    conditions,
+    onChangeFilter,
   } = props;
 
   let showCellBars = false;
@@ -187,7 +193,18 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
     // console.log('Plugin element', root);
   });
 
-  // console.log('Plugin props', props);
+  console.log('Plugin props', props);
+  const getSharedStyle = (column: DataColumnMeta): CSSProperties => {
+    const { isNumeric, config = {} } = column;
+    const textAlign = config.horizontalAlign
+      ? config.horizontalAlign
+      : isNumeric
+      ? 'right'
+      : 'left';
+    return {
+      textAlign,
+    };
+  };
 
   const pageSizeOptions = useMemo(
     () => PAGE_SIZE_OPTIONS.filter(([n, _]) => n <= 2 * data.length) as SizeOption[],
@@ -197,7 +214,7 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
   const [filters, setFilters] = useState(initialFilters);
 
   const getValueRange = useCallback(
-    function getValueRange(key: string) {
+    function getValueRange(key: string, alignPositiveNegative: boolean) {
       if (typeof data?.[0]?.[key] === 'number') {
         const nums = data.map(row => row[key]) as number[];
         return (alignPositiveNegative
@@ -206,7 +223,7 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
       }
       return null;
     },
-    [alignPositiveNegative, data],
+    [data],
   );
 
   const isActiveFilterValue = useCallback(
@@ -234,13 +251,25 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
 
   const getColumnConfigs = useCallback(
     (column: DataColumnMeta, i: number): ColumnWithLooseAccessor<D> => {
-      const { key, label, dataType } = column;
+      const { key, label, isNumeric, dataType, isMetric, config = {} } = column;
+      const isFilter = !isNumeric && emitFilter;
+      const columnWidth = Number.isNaN(Number(config.columnWidth))
+        ? config.columnWidth
+        : Number(config.columnWidth);
+
+      // inline style for both th and td cell
+      const sharedStyle: CSSProperties = getSharedStyle(column);
+
+      const alignPositiveNegative =
+        config.alignPositiveNegative === undefined ? defaultAlignPN : config.alignPositiveNegative;
+      const colorPositiveNegative =
+        config.colorPositiveNegative === undefined ? defaultColorPN : config.colorPositiveNegative;
+
       let className = '';
-      if (dataType === DataType.Number) {
-        className += ' dt-metric';
-      } else if (emitFilter) {
+      if (isFilter) {
         className += ' dt-is-filter';
       }
+
       let disableSortBy = false;
       if (conditions) {
         for (const condition of conditions) {
@@ -254,37 +283,46 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
           }
         }
       }
-      if (i === 0 && props.freezeFirstRow) {
+
+      if (i === 0 && props.freezeFirstColumn) {
         className += ` stick-left`;
       }
-      const valueRange = showCellBars && getValueRange(key);
+      console.log('xxxxxxxxxxx', className);
+
+      const valueRange =
+        (config.showCellBars === undefined ? showCellBars : config.showCellBars) &&
+        (isMetric || isRawRecords) &&
+        getValueRange(key, alignPositiveNegative);
+
       return {
         id: String(i), // to allow duplicate column keys
         // must use custom accessor to allow `.` in column names
         // typing is incorrect in current version of `@types/react-table`
         // so we ask TS not to check.
         accessor: ((datum: D) => datum[key]) as never,
-        Cell: ({ column: col, value }: { column: ColumnInstance<D>; value: DataRecordValue }) => {
-          const [isHtml, text] = formatValue(column, value);
-          const style = {
-            background: valueRange
-              ? cellBar({
-                  value: value as number,
-                  valueRange,
-                  alignPositiveNegative,
-                  colorPositiveNegative,
-                })
-              : undefined,
-          };
+        Cell: ({ value }: { value: DataRecordValue }) => {
+          const [isHtml, text] = formatColumnValue(column, value);
           const html = isHtml ? { __html: text } : undefined;
           const cellProps = {
             // show raw number in title in case of numeric values
             title: typeof value === 'number' ? String(value) : undefined,
             onClick: emitFilter && !valueRange ? () => toggleFilter(key, value) : undefined,
-            className: `${className}${
-              isActiveFilterValue(key, value) ? ' dt-is-active-filter' : ''
-            }`,
-            style,
+            className: [
+              className,
+              value == null ? 'dt-is-null' : '',
+              isActiveFilterValue(key, value) ? ' dt-is-active-filter' : '',
+            ].join(' '),
+            style: {
+              ...sharedStyle,
+              background: valueRange
+                ? cellBar({
+                    value: value as number,
+                    valueRange,
+                    alignPositiveNegative,
+                    colorPositiveNegative,
+                  })
+                : undefined,
+            },
           };
           if (html) {
             // eslint-disable-next-line react/no-danger
@@ -294,33 +332,55 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
           // render `Cell`. This saves some time for large tables.
           return <td {...cellProps}>{text}</td>;
         },
-        Header: ({ column: col, title, onClick, style }) => {
-          return (
-            <th
-              title={title}
-              className={col.isSorted ? `${className || ''} is-sorted` : className}
-              style={style}
-              onClick={onClick}
-            >
-              {label}
-              {disableSortBy ? '' : <SortIcon column={col} />}
-            </th>
-          );
-        },
-        disableSortBy,
+        Header: ({ column: col, onClick, style }) => (
+          <th
+            title="Shift + Click to sort by multiple columns"
+            className={[className, col.isSorted ? 'is-sorted' : ''].join(' ')}
+            style={{
+              ...sharedStyle,
+              ...style,
+            }}
+            onClick={onClick}
+          >
+            {/* can't use `columnWidth &&` because it may also be zero */}
+            {config.columnWidth ? (
+              // column width hint
+              <div
+                style={{
+                  width: columnWidth,
+                  height: 0.01,
+                }}
+              />
+            ) : null}
+            {label}
+            <SortIcon column={col} />
+          </th>
+        ),
+        Footer: totals ? (
+          i === 0 ? (
+            <th>{t('Totals')}</th>
+          ) : (
+            <td style={sharedStyle}>
+              <strong>{formatColumnValue(column, totals[key])[1]}</strong>
+            </td>
+          )
+        ) : undefined,
         sortDescFirst: sortDesc,
+        disableSortBy,
         sortType: getSortTypeByDataType(dataType),
       };
     },
     [
-      alignPositiveNegative,
-      colorPositiveNegative,
+      defaultAlignPN,
+      defaultColorPN,
       emitFilter,
       getValueRange,
       isActiveFilterValue,
+      isRawRecords,
       showCellBars,
       sortDesc,
       toggleFilter,
+      totals,
     ],
   );
 
@@ -359,7 +419,7 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
     if (Object.keys(groupColumnMap).length) {
       columnsMeta.forEach((columnMeta, index) => {
         let thClassName = '';
-        if (parents.length === 0 && props.freezeFirstRow) {
+        if (parents.length === 0 && props.freezeFirstColumn) {
           thClassName = 'stick-left';
         }
         if (columnGroupMap.hasOwnProperty(columnMeta.key)) {
@@ -417,7 +477,6 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
     <Styles
       ref={rootElem}
       boldText={props.boldText}
-      headerFontSize={props.headerFontSize}
       height={height}
       width={width}
       hasMultipleHeader={parents.length}
@@ -438,58 +497,29 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
           </div>
         ) : null}
       </div>
-      <DataTableWrapper<D>
-        // @ts-ignore
-        conditions={conditions}
-        freezeFirstRow={props.freezeFirstRow}
+      <DataTable<D>
         columns={parents.length > 0 ? parents : columns}
         data={data}
+        // rowCount={rowCount}
         tableClassName="table table-striped table-condensed"
         pageSize={pageSize}
+        // serverPaginationData={serverPaginationData}
         pageSizeOptions={pageSizeOptions}
         width={width}
         height={height - (props.includeExcel ? 10 : 0)}
+        // serverPagination={serverPagination}
+        // onServerPaginationChange={handleServerPaginationChange}
+        // 9 page items in > 340px works well even for 100+ pages
         maxPageItemCount={width > 340 ? 9 : 7}
         noResults={(filter: string) => t(filter ? 'No matching records found' : 'No records found')}
         searchInput={includeSearch && SearchInput}
         selectPageSize={pageSize !== null && SelectPageSize}
+        // not in use in Superset, but needed for unit tests
         sticky={sticky}
+        // @ts-ignore
+        conditions={conditions}
+        freezeFirstRow={props.freezeFirstColumn || false}
       />
     </Styles>
   );
-}
-
-class DataTableWrapper<D extends DataRecord = DataRecord> extends React.Component {
-  timeout = null;
-
-  constructor(
-    props: TableChartTransformedProps<D> & {
-      sticky?: DataTableProps<D>['sticky'];
-    },
-  ) {
-    super(props);
-    this.state = {
-      showTable: true,
-    };
-  }
-
-  componentWillReceiveProps(nextProps: any, nextContext: any): void {
-    this.setState({ showTable: false });
-    if (this.timeout) {
-      // @ts-ignore
-      clearTimeout(this.timeout);
-    }
-    // @ts-ignore
-    this.timeout = setTimeout(() => {
-      this.setState({ showTable: true });
-      this.timeout = null;
-    }, 300);
-  }
-
-  render() {
-    // @ts-ignore
-    const { showTable } = this.state;
-    // @ts-ignore
-    return <DataTable<D> showMainHeader={showTable} {...this.props} />;
-  }
 }
