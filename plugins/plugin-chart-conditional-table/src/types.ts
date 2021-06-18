@@ -56,6 +56,7 @@ export interface TableChartFormData {
   tableFilter?: boolean;
   timeGrainSqla?: TimeGranularity;
   conditions: Array<ConditionProps>;
+  jsonCondition: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   headerGrouping: Array<any>;
 }

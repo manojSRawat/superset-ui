@@ -224,4 +224,10 @@ export default styled.div<ConditionalTableStylesProps>`
     background: white !important;
     z-index: 1 !important;
   }
+
+  .excel-icon {
+    color: green;
+    font-size: 1.8rem;
+    cursor: pointer;
+  }
 `;
