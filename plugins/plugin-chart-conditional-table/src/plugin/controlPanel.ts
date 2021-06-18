@@ -210,11 +210,22 @@ const config: ControlPanelConfig = {
             config: {
               renderTrigger: true,
               type: 'CollectionControl',
-              label: 'Filters',
+              label: 'Conditions',
               description: t('Filter configuration for the filter box'),
               validators: [],
               controlName: 'ConditionalTableFilterBox',
               mapStateToProps: ({ datasource }) => ({ datasource }),
+            },
+          },
+        ],
+        [
+          {
+            name: 'jsonCondition',
+            config: {
+              type: 'TextAreaControl',
+              renderTrigger: true,
+              label: t('JSON Condition'),
+              description: t('The text you want to see in the header'),
             },
           },
         ],

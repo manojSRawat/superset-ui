@@ -238,6 +238,7 @@ export default function transformProps(chartProps: TableChartProp) {
     headerFontSize,
     headerText,
     conditions,
+    jsonCondition,
     alignPn: alignPositiveNegative = true,
     colorPn: colorPositiveNegative = true,
     showCellBars = true,
@@ -257,6 +258,13 @@ export default function transformProps(chartProps: TableChartProp) {
     columns: queryData.data.length ? Object.keys(queryData.data[0]) : [],
   };
 
+  let stringConstants = null;
+  if (jsonCondition) {
+    try {
+      stringConstants = JSON.parse(jsonCondition);
+    } catch (error) {}
+  }
+
   const [metrics, percentMetrics, columns] = processColumns(tableChartProps);
 
   const data = processDataRecords(tableChartProps.queryData?.data?.records, columns);
@@ -267,7 +275,7 @@ export default function transformProps(chartProps: TableChartProp) {
     boldText,
     headerFontSize,
     headerText,
-    conditions,
+    conditions: conditions && conditions.length ? conditions : stringConstants,
     data,
     columns,
     metrics,

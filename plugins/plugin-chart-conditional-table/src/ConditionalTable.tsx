@@ -135,24 +135,24 @@ function SelectPageSize({ options, current, onChange }: SelectPageSizeRendererPr
   );
 }
 
-// function generateExcel(data: any) {
-//   const requestOptions = {
-//     method: 'POST',
-//     headers: { 'Content-Type': 'application/json' },
-//     body: JSON.stringify(data),
-//   };
-//   // 'https://adapt.agriodisha.nic.in/api'
-//   fetch('http://68.183.81.222:8000/api/superset-excel', requestOptions)
-//     .then(response => response.json())
-//     .then(data => {
-//       if (data && data.data && data.data.data && data.data.data.url) {
-//         const newWin = window.open(data.data.data.url, '_blank');
-//         if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
-//           alert('Please Allow Pop Up');
-//         }
-//       }
-//     });
-// }
+function generateExcel(data: any) {
+  const requestOptions = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  };
+
+  fetch('https://adapt.agriodisha.nic.in/api/api/superset-excel', requestOptions)
+    .then(response => response.json())
+    .then(data => {
+      if (data && data.data && data.data.data && data.data.data.url) {
+        const newWin = window.open(data.data.data.url, '_blank');
+        if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+          alert('Please Allow Pop Up');
+        }
+      }
+    });
+}
 
 export default function ConditionalTable<D extends DataRecord = DataRecord>(
   props: TableChartTransformedProps<D> & {
@@ -426,11 +426,17 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
         <div className="col-md-6">
           <h3>{props.headerText}</h3>
         </div>
-        {/* {props.includeExcel ? (
+        {props.includeExcel ? (
           <div className="col-md-6">
-            <i className="fa fa-file-excel-o float-right" aria-hidden="true" onClick={() => generateExcel({ columns: columnsMeta, conditions, data, groups: columnGroups })} />
+            <i
+              className="fa fa-file-excel-o float-right excel-icon"
+              aria-hidden="true"
+              onClick={() =>
+                generateExcel({ columns: columnsMeta, conditions, data, groups: columnGroups })
+              }
+            />
           </div>
-        ) : null} */}
+        ) : null}
       </div>
       <DataTableWrapper<D>
         // @ts-ignore
