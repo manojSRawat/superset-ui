@@ -34,7 +34,6 @@ export default styled.div<ConditionalTableStylesProps>`
 
   h3 {
     /* You can use your props to control CSS! */
-    font-size: ${({ theme, headerFontSize }) => theme.typography.sizes[headerFontSize]};
     font-weight: ${({ theme, boldText }) => theme.typography.weights[boldText ? 'bold' : 'normal']};
   }
 

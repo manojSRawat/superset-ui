@@ -17,68 +17,23 @@
  * under the License.
  */
 import {
-  DataRecord,
-  ChartProps,
-  QueryFormData,
-  supersetTheme,
-  TimeseriesDataRecord,
-  QueryFormDataMetric,
-  TimeFormatter,
   NumberFormatter,
+  TimeFormatter,
+  TimeGranularity,
+  QueryFormMetric,
+  ChartProps,
+  DataRecord,
   DataRecordValue,
   DataRecordFilters,
-  TimeGranularity,
+  GenericDataType,
+  QueryMode,
+  ChartDataResponseResult,
+  QueryFormData,
+  // @ts-ignore
+  SetDataMaskHook,
 } from '@superset-ui/core';
-import { Column, Row } from 'react-table';
-
-export enum DataType {
-  Number = 'number',
-  String = 'string',
-  DateTime = 'datetime',
-  MomentDateTime = 'momentdatetime',
-}
-
-export interface TableChartFormData {
-  boldText: boolean;
-  headerFontSize: number;
-  headerText: string;
-  alignPn?: boolean;
-  colorPn?: boolean;
-  includeSearch?: boolean;
-  includeExcel?: boolean;
-  freezeFirstRow?: boolean;
-  pageLength?: string | number | null; // null means auto-paginate
-  metrics?: QueryFormDataMetric[] | null;
-  percentMetrics?: QueryFormDataMetric[] | null;
-  orderDesc?: boolean;
-  showCellBars?: boolean;
-  tableTimestampFormat?: string;
-  tableFilter?: boolean;
-  timeGrainSqla?: TimeGranularity;
-  conditions: Array<ConditionProps>;
-  jsonCondition: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  headerGrouping: Array<any>;
-}
-
-export interface TableChartData<D extends DataRecord = DataRecord> {
-  records: D[];
-  columns: string[];
-}
-
-export interface TableChartProps<D extends DataRecord = DataRecord> extends ChartProps {
-  formData: TableChartFormData;
-  queryData: ChartProps['queryData'] & {
-    data?: TableChartData<D>;
-  };
-}
-
-export interface TableChartProp<D extends DataRecord = DataRecord> extends ChartProps {
-  formData: TableChartFormData;
-  queryData: ChartProps['queryData'] & {
-    data: D[];
-  };
-}
+// @ts-ignore
+import { ColumnConfig } from '@superset-ui/chart-controls';
 
 export type CustomFormatter = (value: DataRecordValue) => string;
 
@@ -87,24 +42,91 @@ export interface DataColumnMeta {
   key: string;
   // `label` is verbose column name used for rendering
   label: string;
-  dataType: DataType;
+  dataType: GenericDataType;
   formatter?: TimeFormatter | NumberFormatter | CustomFormatter;
+  isMetric?: boolean;
+  isPercentMetric?: boolean;
+  isNumeric?: boolean;
+  config?: ColumnConfig;
 }
+
+export type TableChartFormData = QueryFormData & {
+  align_pn?: boolean;
+  color_pn?: boolean;
+  include_time?: boolean;
+  include_search?: boolean;
+  query_mode?: QueryMode;
+  page_length?: string | number | null; // null means auto-paginate
+  metrics?: QueryFormMetric[] | null;
+  percent_metrics?: QueryFormMetric[] | null;
+  timeseries_limit_metric?: QueryFormMetric[] | QueryFormMetric | null;
+  groupby?: QueryFormMetric[] | null;
+  all_columns?: QueryFormMetric[] | null;
+  order_desc?: boolean;
+  show_cell_bars?: boolean;
+  table_timestamp_format?: string;
+  table_filter?: boolean;
+  time_grain_sqla?: TimeGranularity;
+  column_config?: Record<string, ColumnConfig>;
+};
+
+export interface TableChartProps extends ChartProps {
+  ownCurrentState: {
+    pageSize?: number;
+    currentPage?: number;
+  };
+  rawFormData: TableChartFormData;
+  queriesData: ChartDataResponseResult[];
+}
+
+export interface TableChartData<D extends DataRecord = DataRecord> {
+  records: D[];
+  columns: string[];
+}
+
+export interface TableChartTransformedProps<D extends DataRecord = DataRecord> {
+  height: number;
+  width: number;
+  rowCount?: number;
+  serverPagination: boolean;
+  serverPaginationData: { pageSize?: number; currentPage?: number };
+  setDataMask: SetDataMaskHook;
+  isRawRecords?: boolean;
+  data: D[];
+  totals?: D;
+  columns: DataColumnMeta[];
+  metrics?: (keyof D)[];
+  percentMetrics?: (keyof D)[];
+  pageSize?: number;
+  showCellBars?: boolean;
+  sortDesc?: boolean;
+  includeSearch?: boolean;
+  alignPositiveNegative?: boolean;
+  colorPositiveNegative?: boolean;
+  tableTimestampFormat?: string;
+  // These are dashboard filters, don't be confused with in-chart search filter
+  // enabled by `includeSearch`
+  filters?: DataRecordFilters;
+  emitFilter?: boolean;
+  onChangeFilter?: ChartProps['hooks']['onAddFilter'];
+
+  // custom
+  headerText: string;
+  boldText: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  groups: any[];
+  includeExcel?: boolean;
+  freezeFirstColumn?: boolean;
+  conditions: Array<ConditionProps>;
+}
+
+// Custom
 
 export interface ConditionalTableStylesProps {
   height: number;
   width: number;
-  headerFontSize: keyof typeof supersetTheme.typography.sizes;
   boldText: boolean;
   hasMultipleHeader: boolean;
-}
-
-export interface TableProps {
-  columns: Array<Column<Row<object>>>;
-  data: Array<object>;
-  conditions: Array<ConditionProps>;
-  defaultPageSize: number;
-  disablePagination: boolean;
 }
 
 export interface ConditionProps {
@@ -144,38 +166,3 @@ interface ConditionalTableCustomizeProps {
 export type ConditionalTableQueryFormData = QueryFormData &
   ConditionalTableStylesProps &
   ConditionalTableCustomizeProps;
-
-export type ConditionalTableProps = ConditionalTableStylesProps &
-  ConditionalTableCustomizeProps & {
-    data: TimeseriesDataRecord[];
-    // add typing here for the props you pass in from transformProps.ts!
-  };
-
-export interface TableChartTransformedProps<D extends DataRecord = DataRecord> {
-  height: number;
-  width: number;
-  headerFontSize: keyof typeof supersetTheme.typography.sizes;
-  headerText: string;
-  boldText: boolean;
-  data: D[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  groups: any[];
-  columns: DataColumnMeta[];
-  metrics?: (keyof D)[];
-  percentMetrics?: (keyof D)[];
-  pageSize?: number;
-  showCellBars?: boolean;
-  sortDesc?: boolean;
-  includeSearch?: boolean;
-  includeExcel?: boolean;
-  freezeFirstRow?: boolean;
-  alignPositiveNegative?: boolean;
-  colorPositiveNegative?: boolean;
-  tableTimestampFormat?: string;
-  conditions: Array<ConditionProps>;
-  // These are dashboard filters, don't be confused with in-chart search filter
-  // enabled by `includeSearch`
-  filters?: DataRecordFilters;
-  emitFilter?: boolean;
-  onChangeFilter?: ChartProps['hooks']['onAddFilter'];
-}

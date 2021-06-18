@@ -183,21 +183,6 @@ const config: ControlPanelConfig = {
             },
           },
         ],
-        // [
-        //   {
-        //     name: 'orderBy',
-        //     config: {
-        //       type: 'SelectControl',
-        //       label: t('Ordering'),
-        //       description: t('One or many metrics to display'),
-        //       multi: true,
-        //       default: [],
-        //       mapStateToProps: ({ datasource }) => ({
-        //         choices: datasource?.order_by_choices || [],
-        //       })
-        //     },
-        //   }
-        // ]
       ],
     },
     {
@@ -284,7 +269,7 @@ const config: ControlPanelConfig = {
         ],
         [
           {
-            name: 'freeze_first_row',
+            name: 'freeze_first_column',
             config: {
               type: 'CheckboxControl',
               label: t('Freeze First Column'),
@@ -322,28 +307,6 @@ const config: ControlPanelConfig = {
               renderTrigger: true,
               default: true,
               description: t('A checkbox to make the '),
-            },
-          },
-        ],
-        [
-          {
-            name: 'header_font_size',
-            config: {
-              type: 'SelectControl',
-              label: t('Font Size'),
-              default: 'xl',
-              choices: [
-                // [value, label]
-                ['xxs', 'xx-small'],
-                ['xs', 'x-small'],
-                ['s', 'small'],
-                ['m', 'medium'],
-                ['l', 'large'],
-                ['xl', 'x-large'],
-                ['xxl', 'xx-large'],
-              ],
-              renderTrigger: true,
-              description: t('The size of your header font'),
             },
           },
         ],
