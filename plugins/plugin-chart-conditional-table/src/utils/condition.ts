@@ -107,7 +107,7 @@ export default function getCellData(
 
   if (conditions) {
     for (const condition of conditions) {
-      if (condition.column === cellKey && condition.conditions) {
+      if (condition.column === cellKey) {
         if (condition.alignment) {
           align = condition.alignment;
         }
@@ -163,36 +163,38 @@ export default function getCellData(
             }
           }
 
-          for (let i = 0; i < condition.conditions.length; i++) {
-            if (
-              !isNaN(condition.conditions[i].initialValue) &&
-              !isNaN(condition.conditions[i].initialValue)
-            ) {
-              dataType = 'NUMBER';
-            }
-            if (
-              condition.conditions[i].initialValue &&
-              isConditionSatisfied(
-                cellValue,
-                condition.conditions[i].initialValue,
-                condition.conditions[i].initialSymbol,
-                dataType,
-                condition.dateFormat,
-              )
-            ) {
+          if (condition.conditions) {
+            for (let i = 0; i < condition.conditions.length; i++) {
               if (
-                !condition.conditions[i].finalValue ||
-                (condition.conditions[i].finalValue &&
-                  isConditionSatisfied(
-                    cellValue,
-                    condition.conditions[i].finalValue,
-                    condition.conditions[i].finalSymbol,
-                    dataType,
-                    condition.dateFormat,
-                  ))
+                !isNaN(condition.conditions[i].initialValue) &&
+                !isNaN(condition.conditions[i].initialValue)
               ) {
-                colorProperty = `rgba(${condition.conditions[i].color.r},${condition.conditions[i].color.g},${condition.conditions[i].color.b},${condition.conditions[i].color.a})`;
-                break;
+                dataType = 'NUMBER';
+              }
+              if (
+                condition.conditions[i].initialValue &&
+                isConditionSatisfied(
+                  cellValue,
+                  condition.conditions[i].initialValue,
+                  condition.conditions[i].initialSymbol,
+                  dataType,
+                  condition.dateFormat,
+                )
+              ) {
+                if (
+                  !condition.conditions[i].finalValue ||
+                  (condition.conditions[i].finalValue &&
+                    isConditionSatisfied(
+                      cellValue,
+                      condition.conditions[i].finalValue,
+                      condition.conditions[i].finalSymbol,
+                      dataType,
+                      condition.dateFormat,
+                    ))
+                ) {
+                  colorProperty = `rgba(${condition.conditions[i].color.r},${condition.conditions[i].color.g},${condition.conditions[i].color.b},${condition.conditions[i].color.a})`;
+                  break;
+                }
               }
             }
           }

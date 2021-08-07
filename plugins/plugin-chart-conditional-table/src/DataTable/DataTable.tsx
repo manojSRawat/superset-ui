@@ -343,6 +343,9 @@ export default function DataTable<D extends object>({
                 {Object.keys(total).map((cellKey: string, index) => {
                   // @ts-ignore
                   const cellData = getCellData(cellKey, total[cellKey], conditions, true);
+                  if (index === 0 && (!cellData.value || cellData.value === ' - ')) {
+                    cellData.value = 'Total';
+                  }
 
                   return (
                     <td
