@@ -51,6 +51,7 @@ export interface DataTableProps<D extends object> extends TableOptions<D> {
   sticky?: boolean;
   wrapperRef?: MutableRefObject<HTMLDivElement>;
   conditions: Array<ConditionProps>;
+  hiddenColumns: Array<any>;
   freezeFirstRow: Boolean;
 }
 
@@ -61,6 +62,7 @@ export interface RenderHTMLCellProps extends HTMLProps<HTMLTableCellElement> {
 // Be sure to pass our updateMyData and the skipReset option
 export default function DataTable<D extends object>({
   conditions,
+  hiddenColumns,
   freezeFirstRow,
   tableClassName,
   columns,
@@ -96,6 +98,7 @@ export default function DataTable<D extends object>({
     // understand pageSize = 0
     sortBy: sortByRef.current,
     pageSize: initialPageSize > 0 ? initialPageSize : data.length || 10,
+    hiddenColumns: hiddenColumns
   };
 
   const defaultWrapperRef = useRef<HTMLDivElement>(null);
@@ -273,6 +276,7 @@ export default function DataTable<D extends object>({
                   return column.render('Header', {
                     key: column.id,
                     ...column.getSortByToggleProps(),
+                    ...column.getToggleHiddenProps()
                   });
                 })}
               </tr>
@@ -297,12 +301,14 @@ export default function DataTable<D extends object>({
                           Object.keys(cell.row.original)[cell.column.id],
                           cell.value.input,
                           conditions,
+                          row.original,
                         );
                       } else {
                         cellData = getCellData(
                           Object.keys(cell.row.original)[cell.column.id],
                           cell.value,
                           conditions,
+                          row.original,
                         );
                       }
                       let className = cellData.class;
@@ -342,7 +348,7 @@ export default function DataTable<D extends object>({
               <tr>
                 {Object.keys(total).map((cellKey: string, index) => {
                   // @ts-ignore
-                  const cellData = getCellData(cellKey, total[cellKey], conditions, true);
+                  const cellData = getCellData(cellKey, total[cellKey], conditions, row.original, true);
                   if (index === 0 && (!cellData.value || cellData.value === ' - ')) {
                     cellData.value = 'Total';
                   }

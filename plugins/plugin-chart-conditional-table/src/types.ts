@@ -137,6 +137,7 @@ export interface ConditionProps {
   totalFormula: string;
   disableFilters: boolean;
   dateFormat: string;
+  conditionalColumn: string;
   disableSortBy: boolean;
   thumbnailHeight: number;
   thumbnailWidth: number;

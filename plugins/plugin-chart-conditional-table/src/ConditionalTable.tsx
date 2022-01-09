@@ -248,6 +248,7 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
     },
     [filters, isActiveFilterValue, onChangeFilter],
   );
+  const hiddenColumnKeys: any = [];
 
   const getColumnConfigs = useCallback(
     (column: DataColumnMeta, i: number): ColumnWithLooseAccessor<D> => {
@@ -279,6 +280,9 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
             if (condition.alignment) {
               className += ` text-${condition.alignment}`;
             }
+            if (condition.conditionalColumn) {
+              hiddenColumnKeys.push(condition.conditionalColumn);
+            }
             break;
           }
         }
@@ -287,7 +291,6 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
       if (i === 0 && props.freezeFirstColumn) {
         className += ` stick-left`;
       }
-      console.log('xxxxxxxxxxx', className);
 
       const valueRange =
         (config.showCellBars === undefined ? showCellBars : config.showCellBars) &&
@@ -381,6 +384,7 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
       sortDesc,
       toggleFilter,
       totals,
+      hiddenColumnKeys
     ],
   );
 
@@ -394,12 +398,19 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
   let groupColumnMap: any = {};
   let columnGroupMap: any = {};
   let columnIndexMap: any = {};
+  const hiddenColumns: Array<string> = [];
 
+  // getting all the column names
+  columnsMeta.forEach(column => {
+    columnKeys.push(column.key);
+  });
+  hiddenColumnKeys.forEach((hiddenColumnKey: any) => {
+    const index = columnKeys.indexOf(hiddenColumnKey);
+    if (index !== -1) {
+      hiddenColumns.push(index.toString());
+    }
+  });
   if (groups && groups.length) {
-    // getting all the column names
-    columnsMeta.forEach(column => {
-      columnKeys.push(column.key);
-    });
     //
     groups.forEach(group => {
       if (group.children) {
@@ -466,13 +477,6 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
     }
   }
 
-  // console.log('--->', columnsMeta);
-  // console.log('--->', groupColumnMap);
-  // console.log('--->', columnGroupMap);
-  // console.log('--->', columnIndexMap);
-  // console.log('---> xx', parents);
-  // console.log('xxxx', columnGroups);
-
   return (
     <Styles
       ref={rootElem}
@@ -518,6 +522,7 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
         sticky={sticky}
         // @ts-ignore
         conditions={conditions}
+        hiddenColumns={hiddenColumns}
         freezeFirstRow={props.freezeFirstColumn || false}
       />
     </Styles>

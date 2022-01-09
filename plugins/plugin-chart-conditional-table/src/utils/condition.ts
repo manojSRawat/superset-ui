@@ -91,6 +91,7 @@ export default function getCellData(
   cellKey: string,
   cellValue: any,
   conditions: Array<ConditionProps>,
+  row: any,
   isTotalRow = false,
 ) {
   let colorProperty = 'rgba(255, 255, 255, 255)';
@@ -141,7 +142,7 @@ export default function getCellData(
                 }
                 break;
               case 'PERCENTAGE':
-                cellValue = isNaN(cellValue) || cellValue === null ? 0 : cellValue;
+                cellValue = isNaN(cellValue) || !cellValue ? 0 : cellValue;
                 parsedValue = parsedValue ? `${parsedValue}%` : '0%';
                 break;
               case 'IMAGE':
@@ -161,6 +162,10 @@ export default function getCellData(
                 }
                 break;
             }
+          }
+
+          if (condition.conditionalColumn) {
+            colorProperty = row[condition.conditionalColumn];
           }
 
           if (condition.conditions) {
