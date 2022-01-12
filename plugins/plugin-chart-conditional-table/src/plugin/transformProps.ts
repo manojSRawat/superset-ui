@@ -216,6 +216,8 @@ const transformProps = (chartProps: TableChartProps): TableChartTransformedProps
     server_pagination: serverPagination = false,
     server_page_length: serverPageLength = 10,
     order_desc: sortDesc = false,
+    matrixOrderBy: matrixOrderBy,
+    matrixOrderByOrder: matrixOrderByOrder,
     // query_mode: queryMode,
     // show_totals: showTotals,
   } = formData;
@@ -255,6 +257,8 @@ const transformProps = (chartProps: TableChartProps): TableChartTransformedProps
     rowCount,
     boldText,
     headerText,
+    matrixOrderBy,
+    matrixOrderByOrder,
     conditions: conditions && conditions.length ? conditions : stringConstants,
     data,
     columns,

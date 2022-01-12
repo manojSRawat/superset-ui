@@ -310,6 +310,30 @@ const config: ControlPanelConfig = {
             },
           },
         ],
+        [
+          {
+            name: 'matrix_order_by',
+            config: {
+              type: 'TextControl',
+              default: '',
+              renderTrigger: true,
+              label: t('Matrix Order By'),
+              description: t('Order By key'),
+            },
+          },
+          {
+            name: 'matrix_order_by_order',
+            config: {
+              type: 'SelectControl',
+              label: t('Order'),
+              description: t('Order'),
+              multi: false,
+              renderTrigger: true,
+              default: 'ASC',
+              choices: ['ASC', 'DESC'],
+            },
+          },
+        ],
       ],
     },
   ],

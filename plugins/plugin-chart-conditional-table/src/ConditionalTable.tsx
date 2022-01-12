@@ -181,6 +181,8 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
     sticky = true, // whether to use sticky header
     groups,
     conditions,
+    // matrixOrderBy,
+    // matrixOrderByOrder,
     onChangeFilter,
   } = props;
 
@@ -399,10 +401,14 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
   let columnGroupMap: any = {};
   let columnIndexMap: any = {};
   const hiddenColumns: Array<string> = [];
+  // let matrixOrderByKey: any = null;
 
   // getting all the column names
   columnsMeta.forEach(column => {
     columnKeys.push(column.key);
+    /*if (matrixOrderBy === column.key) {
+      matrixOrderByKey = column.key;
+    }*/
   });
   hiddenColumnKeys.forEach((hiddenColumnKey: any) => {
     const index = columnKeys.indexOf(hiddenColumnKey);
