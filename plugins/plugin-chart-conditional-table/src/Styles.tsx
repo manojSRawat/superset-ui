@@ -79,13 +79,13 @@ export default styled.div<ConditionalTableStylesProps>`
     justify-content: space-between;
   }
 
-  text-left {
+  .text-left {
     text-align: left !important;
   }
-  text-right {
+  .text-right {
     text-align: right !important;
   }
-  text-center {
+  .text-center {
     text-align: center !important;
   }
 
@@ -224,9 +224,16 @@ export default styled.div<ConditionalTableStylesProps>`
     z-index: 1 !important;
   }
 
+  .ct-excel-container {
+  }
+
   .excel-icon {
     color: green;
     font-size: 1.8rem;
     cursor: pointer;
+  }
+  
+  .ct-table-heading {
+    font-size: 1.8rem;
   }
 `;

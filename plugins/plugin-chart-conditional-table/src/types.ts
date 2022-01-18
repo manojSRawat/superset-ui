@@ -118,6 +118,7 @@ export interface TableChartTransformedProps<D extends DataRecord = DataRecord> {
   includeExcel?: boolean;
   freezeFirstColumn?: boolean;
   conditions: Array<ConditionProps>;
+  includeSno: boolean;
   matrixOrderBy: string;
   matrixOrderByOrder: string;
 }

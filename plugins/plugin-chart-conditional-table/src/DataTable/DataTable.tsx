@@ -287,7 +287,7 @@ export default function DataTable<D extends object>({
           // @ts-ignore
           <tbody {...getTableBodyProps()}>
             {page && page.length > 0 ? (
-              page.map(row => {
+              page.map((row, rowIndex) => {
                 prepareRow(row);
                 const { key: rowKey, ...rowProps } = row.getRowProps();
                 return (
@@ -329,7 +329,7 @@ export default function DataTable<D extends object>({
                                 cellData.imageParams,
                                 cell.row.original,
                               )
-                            : cellData.value}
+                            : Object.keys(cell.row.original)[cell.column.id] === 'sno' ? (pageIndex * pageSize) + rowIndex + 1 : cellData.value}
                         </td>
                       );
                       // return (cell.render('Cell', { key: cell.column.id }));

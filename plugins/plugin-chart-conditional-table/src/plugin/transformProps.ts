@@ -218,11 +218,35 @@ const transformProps = (chartProps: TableChartProps): TableChartTransformedProps
     order_desc: sortDesc = false,
     matrixOrderBy: matrixOrderBy,
     matrixOrderByOrder: matrixOrderByOrder,
+    include_sno: includeSno = false,
     // query_mode: queryMode,
     // show_totals: showTotals,
   } = formData;
 
   const [metrics, percentMetrics, columns] = processColumns(chartProps);
+
+  if (includeSno) {
+    const isSnoExist = columns.filter(col => col.key === 'sno').length;
+    if (!isSnoExist) {
+      metrics.splice(0, 0, 'sno');
+      columns.splice(0, 0, {
+        key: 'sno',
+        label: 'S.No',
+        dataType: GenericDataType.NUMERIC,
+        isNumeric: true,
+        isMetric: false,
+        isPercentMetric: false,
+        formatter: undefined,
+        config: {},
+      });
+    }
+  } else {
+    const isSnoExist = columns.filter(col => col.key === 'sno').length;
+    if (isSnoExist) {
+      metrics.splice(0, 1);
+      columns.splice(0, 1);
+    }
+  }
 
   let baseQuery;
   let countQuery;
@@ -238,7 +262,18 @@ const transformProps = (chartProps: TableChartProps): TableChartTransformedProps
     rowCount = baseQuery?.rowcount ?? 0;
   }
 
-  const data = processDataRecords(baseQuery?.data, columns);
+  let data = processDataRecords(baseQuery?.data, columns);
+  if (includeSno) {
+    let isSnoExist = false;
+    if (data.length) {
+      isSnoExist = data[0].hasOwnProperty('sno');
+    }
+    if (!isSnoExist) {
+      data = data.map((d, index) => {
+        return Object.assign({sno: index + 1}, d)
+      });
+    }
+  }
   // const totals = showTotals && queryMode === QueryMode.aggregate ? totalQuery?.data[0] : undefined;
 
   let stringConstants = null;
@@ -257,6 +292,7 @@ const transformProps = (chartProps: TableChartProps): TableChartTransformedProps
     rowCount,
     boldText,
     headerText,
+    includeSno,
     matrixOrderBy,
     matrixOrderByOrder,
     conditions: conditions && conditions.length ? conditions : stringConstants,

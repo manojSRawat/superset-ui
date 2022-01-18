@@ -186,7 +186,7 @@ const config: ControlPanelConfig = {
       ],
     },
     {
-      label: t('Filters Configuration'),
+      label: t('Conditional Configuration'),
       expanded: true,
       controlSetRows: [
         [
@@ -228,57 +228,6 @@ const config: ControlPanelConfig = {
             },
           },
         ],
-        [
-          {
-            name: 'page_length',
-            config: {
-              type: 'SelectControl',
-              freeForm: true,
-              renderTrigger: true,
-              label: t('Page Length'),
-              default: null,
-              choices: PAGE_SIZE_OPTIONS,
-              description: t('Rows per page, 0 means no pagination'),
-            },
-          },
-          null,
-        ],
-        [
-          {
-            name: 'include_search',
-            config: {
-              type: 'CheckboxControl',
-              label: t('Search Box'),
-              renderTrigger: true,
-              default: false,
-              description: t('Whether to include a client-side search box'),
-            },
-          },
-        ],
-        [
-          {
-            name: 'include_excel',
-            config: {
-              type: 'CheckboxControl',
-              label: t('Download Excel'),
-              renderTrigger: true,
-              default: true,
-              description: t('Whether to include a download excel button'),
-            },
-          },
-        ],
-        [
-          {
-            name: 'freeze_first_column',
-            config: {
-              type: 'CheckboxControl',
-              label: t('Freeze First Column'),
-              renderTrigger: true,
-              default: false,
-              description: t('freeze first row'),
-            },
-          },
-        ],
       ],
     },
     {
@@ -312,6 +261,71 @@ const config: ControlPanelConfig = {
         ],
         [
           {
+            name: 'include_search',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Search Box'),
+              renderTrigger: true,
+              default: false,
+              description: t('Whether to include a client-side search box'),
+            },
+          },
+          {
+            name: 'include_excel',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Download Excel'),
+              renderTrigger: true,
+              default: true,
+              description: t('Whether to include a download excel button'),
+            },
+          },
+        ],
+      ],
+    },
+    {
+      label: t('Body Configuration'),
+      expanded: true,
+      controlSetRows: [
+        [
+          {
+            name: 'page_length',
+            config: {
+              type: 'SelectControl',
+              freeForm: true,
+              renderTrigger: true,
+              label: t('Page Length'),
+              default: null,
+              choices: PAGE_SIZE_OPTIONS,
+              description: t('Rows per page, 0 means no pagination'),
+            },
+          },
+          null,
+        ],
+        [
+          {
+            name: 'freeze_first_column',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Freeze First Column'),
+              renderTrigger: true,
+              default: false,
+              description: t('freeze first row'),
+            },
+          },
+          {
+            name: 'include_sno',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Serial Number'),
+              renderTrigger: true,
+              default: false,
+              description: t('Add Serial No in table'),
+            },
+          },
+        ],
+        [
+          {
             name: 'matrix_order_by',
             config: {
               type: 'TextControl',
@@ -334,7 +348,7 @@ const config: ControlPanelConfig = {
             },
           },
         ],
-      ],
+      ]
     },
   ],
 

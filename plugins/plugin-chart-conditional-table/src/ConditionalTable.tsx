@@ -417,7 +417,6 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
     }
   });
   if (groups && groups.length) {
-    //
     groups.forEach(group => {
       if (group.children) {
         group.children.forEach((child: any) => {
@@ -492,11 +491,11 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
       hasMultipleHeader={parents.length}
     >
       <div className="row">
-        <div className="col-md-6">
-          <h3>{props.headerText}</h3>
+        <div className="col-md-8 ct-table-heading">
+          {props.headerText}
         </div>
         {props.includeExcel ? (
-          <div className="col-md-6">
+          <div className="col-md-4 ct-excel-container">
             <i
               className="fa fa-file-excel-o float-right excel-icon"
               aria-hidden="true"
