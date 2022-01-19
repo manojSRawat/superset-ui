@@ -262,6 +262,21 @@ export default function DataTable<D extends object>({
     });
   };
 
+  const parseCellData = (cell: any, cellData: any, rowIndex: number) => {
+    switch (cellData.cellType) {
+      case 'IMAGE':
+        return renderImageThumbnail(
+          cellData.value,
+          cellData.imageParams,
+          cell.row.original,
+        );
+      case 'LINK':
+        return <><a href={cellData.value} target={'_blank'}>Link</a></>;
+      default:
+        return  Object.keys(cell.row.original)[cell.column.id] === 'sno' ? (pageIndex * pageSize) + rowIndex + 1 : cellData.value
+    }
+  };
+
   const renderTable = () => {
     return (
       // @ts-ignore
@@ -323,13 +338,7 @@ export default function DataTable<D extends object>({
                           style={{ ...cellData.style }}
                           className={className}
                         >
-                          {cellData.isImage
-                            ? renderImageThumbnail(
-                                cellData.value,
-                                cellData.imageParams,
-                                cell.row.original,
-                              )
-                            : Object.keys(cell.row.original)[cell.column.id] === 'sno' ? (pageIndex * pageSize) + rowIndex + 1 : cellData.value}
+                          {parseCellData(cell, cellData, rowIndex)}
                         </td>
                       );
                       // return (cell.render('Cell', { key: cell.column.id }));

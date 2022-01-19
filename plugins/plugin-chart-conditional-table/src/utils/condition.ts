@@ -97,6 +97,7 @@ export default function getCellData(
   let colorProperty = 'rgba(255, 255, 255, 255)';
   let align = 'left';
   let parsedValue = cellValue;
+  let cellType = 'string';
   let showTotal = false;
   let isImage = false;
   let imageParams = {
@@ -147,6 +148,7 @@ export default function getCellData(
                 break;
               case 'IMAGE':
                 isImage = true;
+                cellType = 'IMAGE';
                 break;
               case 'DATE':
                 dataType = 'DATE';
@@ -160,6 +162,9 @@ export default function getCellData(
                 } else {
                   parsedValue = moment(cellValue).format(condition.dateFormat);
                 }
+                break;
+              case 'LINK':
+                cellType = 'LINK';
                 break;
             }
           }
@@ -220,5 +225,6 @@ export default function getCellData(
     value: parsedValue,
     isImage,
     imageParams,
+    cellType
   };
 }
