@@ -145,6 +145,7 @@ export interface ConditionProps {
   thumbnailHeight: number;
   thumbnailWidth: number;
   remarkColumn: string;
+  conditionalColumnTextColor: ColorProp;
   conditions: Array<ConditionColumnProps>;
 }
 

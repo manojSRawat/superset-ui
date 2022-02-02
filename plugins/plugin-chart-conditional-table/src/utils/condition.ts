@@ -94,7 +94,6 @@ export default function getCellData(
   row: any,
   isTotalRow = false,
 ) {
-  let colorProperty = 'rgba(255, 255, 255, 255)';
   let align = 'left';
   let parsedValue = cellValue;
   let cellType = 'string';
@@ -104,6 +103,9 @@ export default function getCellData(
     height: 50,
     width: 50,
     remarkColumn: '',
+  };
+  let style: any = {
+    backgroundColor: 'rgba(255, 255, 255, 255)'
   };
   let dataType = 'STRING';
 
@@ -169,8 +171,12 @@ export default function getCellData(
             }
           }
 
-          if (condition.conditionalColumn) {
-            colorProperty = row[condition.conditionalColumn];
+          if (condition.conditionalColumn && row[condition.conditionalColumn]) {
+            style.backgroundColor = row[condition.conditionalColumn];
+            style['fontWeight'] = 700
+            if (condition.conditionalColumnTextColor) {
+              style['color'] = `rgba(${condition.conditionalColumnTextColor.r},${condition.conditionalColumnTextColor.g},${condition.conditionalColumnTextColor.b},${condition.conditionalColumnTextColor.a})`;
+            }
           }
 
           if (condition.conditions) {
@@ -202,7 +208,7 @@ export default function getCellData(
                       condition.dateFormat,
                     ))
                 ) {
-                  colorProperty = `rgba(${condition.conditions[i].color.r},${condition.conditions[i].color.g},${condition.conditions[i].color.b},${condition.conditions[i].color.a})`;
+                  style.backgroundColor = `rgba(${condition.conditions[i].color.r},${condition.conditions[i].color.g},${condition.conditions[i].color.b},${condition.conditions[i].color.a})`;
                   break;
                 }
               }
@@ -220,7 +226,7 @@ export default function getCellData(
   }
 
   return {
-    style: { backgroundColor: colorProperty },
+    style,
     class: `text-${align}`,
     value: parsedValue,
     isImage,
