@@ -181,6 +181,7 @@ export default function getCellData(
 
           if (condition.textColorReferenceColumn && row[condition.textColorReferenceColumn]) {
             style['color'] = row[condition.textColorReferenceColumn];
+            style['fontWeight'] = 700;
           }
 
           if (condition.conditions) {
