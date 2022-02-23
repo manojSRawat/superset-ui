@@ -285,6 +285,9 @@ export default function ConditionalTable<D extends DataRecord = DataRecord>(
             if (condition.conditionalColumn) {
               hiddenColumnKeys.push(condition.conditionalColumn);
             }
+            if (condition.textColorReferenceColumn) {
+              hiddenColumnKeys.push(condition.textColorReferenceColumn);
+            }
             break;
           }
         }

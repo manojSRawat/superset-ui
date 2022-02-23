@@ -105,7 +105,7 @@ export default function getCellData(
     remarkColumn: '',
   };
   let style: any = {
-    backgroundColor: 'rgba(255, 255, 255, 255)'
+    backgroundColor: 'rgba(255, 255, 255, 255)',
   };
   let dataType = 'STRING';
 
@@ -173,10 +173,14 @@ export default function getCellData(
 
           if (condition.conditionalColumn && row[condition.conditionalColumn]) {
             style.backgroundColor = row[condition.conditionalColumn];
-            style['fontWeight'] = 700
-            if (condition.conditionalColumnTextColor) {
-              style['color'] = `rgba(${condition.conditionalColumnTextColor.r},${condition.conditionalColumnTextColor.g},${condition.conditionalColumnTextColor.b},${condition.conditionalColumnTextColor.a})`;
-            }
+            style['fontWeight'] = 700;
+          }
+          if (condition.conditionalColumnTextColor) {
+            style['color'] = `rgba(${condition.conditionalColumnTextColor.r},${condition.conditionalColumnTextColor.g},${condition.conditionalColumnTextColor.b},${condition.conditionalColumnTextColor.a})`;
+          }
+
+          if (condition.textColorReferenceColumn && row[condition.textColorReferenceColumn]) {
+            style['color'] = row[condition.textColorReferenceColumn];
           }
 
           if (condition.conditions) {
@@ -231,6 +235,6 @@ export default function getCellData(
     value: parsedValue,
     isImage,
     imageParams,
-    cellType
+    cellType,
   };
 }

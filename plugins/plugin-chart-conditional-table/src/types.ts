@@ -140,11 +140,12 @@ export interface ConditionProps {
   totalFormula: string;
   disableFilters: boolean;
   dateFormat: string;
-  conditionalColumn: string;
   disableSortBy: boolean;
   thumbnailHeight: number;
   thumbnailWidth: number;
   remarkColumn: string;
+  conditionalColumn: string;
+  textColorReferenceColumn: string;
   conditionalColumnTextColor: ColorProp;
   conditions: Array<ConditionColumnProps>;
 }
