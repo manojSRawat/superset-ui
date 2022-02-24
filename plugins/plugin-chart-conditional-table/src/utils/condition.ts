@@ -174,9 +174,9 @@ export default function getCellData(
           if (condition.conditionalColumn && row[condition.conditionalColumn]) {
             style.backgroundColor = row[condition.conditionalColumn];
             style['fontWeight'] = 700;
-          }
-          if (condition.conditionalColumnTextColor) {
-            style['color'] = `rgba(${condition.conditionalColumnTextColor.r},${condition.conditionalColumnTextColor.g},${condition.conditionalColumnTextColor.b},${condition.conditionalColumnTextColor.a})`;
+            if (condition.conditionalColumnTextColor) {
+              style['color'] = `rgba(${condition.conditionalColumnTextColor.r},${condition.conditionalColumnTextColor.g},${condition.conditionalColumnTextColor.b},${condition.conditionalColumnTextColor.a})`;
+            }
           }
 
           if (condition.textColorReferenceColumn && row[condition.textColorReferenceColumn]) {
